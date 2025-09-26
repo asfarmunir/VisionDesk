@@ -1,11 +1,9 @@
-'use client'
+"use client";
 
-import { Provider } from 'react-redux'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { store } from '../lib/store'
-import { ThemeProvider } from './ThemeProvider'
-import { NotificationProvider } from './NotificationProvider'
+import { Provider } from "react-redux";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { store } from "../lib/store";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -15,28 +13,19 @@ const queryClient = new QueryClient({
       retry: 1,
     },
   },
-})
+});
 
 interface ProvidersProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <NotificationProvider>
-            {children}
-          </NotificationProvider>
-        </ThemeProvider>
+        {children}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </Provider>
-  )
+  );
 }

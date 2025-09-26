@@ -58,7 +58,6 @@ const projectSchema = new mongoose.Schema({
   },
   dueDate: {
     type: Date,
-    required: [true, "Project due date is required"]
   },
   completedDate: {
     type: Date

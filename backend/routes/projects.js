@@ -39,7 +39,7 @@ router.get("/:id",
 );
 
 // POST /api/projects - Create new project (Moderator and Admin only)
-router.post("/", isModerator, validateProjectCreation, createProject);
+router.post("/", isModerator, createProject);
 
 // PUT /api/projects/:id - Update project
 router.put("/:id",

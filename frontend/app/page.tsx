@@ -1,19 +1,19 @@
-'use client'
+"use client";
 
-import { useAuth } from '../hooks/useAuth'
-import { AuthLayout } from '../components/auth/AuthLayout'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useAuth } from "../hooks/useAuth";
+import { AuthLayout } from "../components/auth/AuthLayout";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth()
-  const router = useRouter()
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard')
+      router.push("/dashboard");
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router]);
 
   if (isLoading) {
     return (
@@ -23,12 +23,12 @@ export default function Home() {
           <p className="text-muted-foreground">Loading VisionDesk...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (isAuthenticated) {
-    return null // Will redirect to dashboard
+    return null; // Will redirect to dashboard
   }
 
-  return <AuthLayout />
+  return <AuthLayout />;
 }

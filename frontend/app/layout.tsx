@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "../components/Providers";
+import { Providers } from "@/components/Providers";
+
 import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
@@ -55,15 +56,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-      </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster position="bottom-center" />
+        </Providers>
       </body>
-      <Toaster position="bottom-center" />
     </html>
   );
 }
