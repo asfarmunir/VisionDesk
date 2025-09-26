@@ -1,4 +1,55 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import {
+  fetchTasks,
+  fetchTaskById,
+  createTaskThunk,
+  updateTaskThunk,
+  deleteTaskThunk,
+  fetchTaskStats
+} from '../thunks/taskThunks'
+import { TaskStats } from '../../api/tasks'
+
+// Lightweight backend task shape (API returns fewer fields than slice stores)
+interface TaskFromApi {
+  _id: string
+  title: string
+  description: string
+  project?: { _id: string; title: string }
+  projectId?: string
+  assignedTo?: MinimalUser
+  assignedBy?: MinimalUser
+  status?: string
+  priority?: string
+  dueDate?: string
+  estimatedHours?: number
+  actualHours?: number
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface MinimalUser { _id: string; name?: string; email?: string }
+
+const normalizeTask = (t: TaskFromApi): Task => ({
+  _id: t._id,
+  title: t.title,
+  description: t.description,
+  project: t.project ? { _id: t.project._id, title: t.project.title } : { _id: t.projectId || 'unknown', title: 'Unknown' },
+  assignedTo: (t.assignedTo as unknown as User) || ({ _id: 'unknown', name: 'Unknown', email: '', role: 'user', isActive: true, lastLogin: '', createdAt: '', updatedAt: '' } as unknown as User),
+  assignedBy: (t.assignedBy as unknown as User) || ({ _id: 'unknown', name: 'Unknown', email: '', role: 'user', isActive: true, lastLogin: '', createdAt: '', updatedAt: '' } as unknown as User),
+  status: (t.status as Task['status']) || 'todo',
+  priority: (t.priority as Task['priority']) || 'medium',
+  tags: [],
+  dueDate: t.dueDate || new Date().toISOString(),
+  completedDate: undefined,
+  estimatedHours: t.estimatedHours,
+  actualHours: t.actualHours,
+  dependencies: [],
+  attachments: [],
+  comments: [],
+  subtasks: [],
+  createdAt: t.createdAt || new Date().toISOString(),
+  updatedAt: t.updatedAt || new Date().toISOString(),
+})
 import { User } from './authSlice'
 
 export interface Task {
@@ -46,6 +97,7 @@ export interface TasksState {
   currentTask: Task | null
   isLoading: boolean
   error: string | null
+  stats: TaskStats | null
   pagination: {
     currentPage: number
     totalPages: number
@@ -70,6 +122,7 @@ const initialState: TasksState = {
   currentTask: null,
   isLoading: false,
   error: null,
+  stats: null,
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -167,6 +220,85 @@ const taskSlice = createSlice({
       state.error = null
     }
   },
+  extraReducers: (builder) => {
+    // Fetch list
+    builder.addCase(fetchTasks.pending, (state) => {
+      state.isLoading = true
+      state.error = null
+    })
+    builder.addCase(fetchTasks.fulfilled, (state, action) => {
+      state.isLoading = false
+      state.error = null
+      const { tasks, pagination } = action.payload as { tasks: TaskFromApi[]; pagination: TasksState['pagination'] }
+      state.tasks = tasks.map(normalizeTask)
+      state.pagination = pagination
+    })
+    builder.addCase(fetchTasks.rejected, (state, action) => {
+      state.isLoading = false
+      state.error = action.payload as string || 'Failed to fetch tasks'
+    })
+
+    // Fetch single
+    builder.addCase(fetchTaskById.pending, (state) => {
+      state.isLoading = true
+      state.error = null
+    })
+    builder.addCase(fetchTaskById.fulfilled, (state, action) => {
+      state.isLoading = false
+      const t = action.payload as TaskFromApi
+      state.currentTask = normalizeTask(t)
+    })
+    builder.addCase(fetchTaskById.rejected, (state, action) => {
+      state.isLoading = false
+      state.error = action.payload as string || 'Failed to load task'
+    })
+
+    // Create
+    builder.addCase(createTaskThunk.pending, (state) => {
+      state.error = null
+    })
+    builder.addCase(createTaskThunk.fulfilled, (state, action) => {
+      const t = action.payload as TaskFromApi
+      state.tasks.unshift(normalizeTask(t))
+      state.pagination.totalItems += 1
+    })
+    builder.addCase(createTaskThunk.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to create task'
+    })
+
+    // Update
+    builder.addCase(updateTaskThunk.fulfilled, (state, action) => {
+      const updated = action.payload as TaskFromApi
+      const idx = state.tasks.findIndex(t => t._id === updated._id)
+      const normalized = normalizeTask(updated)
+      if (idx !== -1) state.tasks[idx] = normalized
+      if (state.currentTask && state.currentTask._id === updated._id) {
+        state.currentTask = normalized
+      }
+    })
+    builder.addCase(updateTaskThunk.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to update task'
+    })
+
+    // Delete
+    builder.addCase(deleteTaskThunk.fulfilled, (state, action) => {
+      const id = action.payload as string
+      state.tasks = state.tasks.filter(t => t._id !== id)
+      state.pagination.totalItems = Math.max(0, state.pagination.totalItems - 1)
+      if (state.currentTask && state.currentTask._id === id) state.currentTask = null
+    })
+    builder.addCase(deleteTaskThunk.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to delete task'
+    })
+
+    // Stats
+    builder.addCase(fetchTaskStats.fulfilled, (state, action) => {
+      state.stats = action.payload as TaskStats
+    })
+    builder.addCase(fetchTaskStats.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to load task stats'
+    })
+  }
 })
 
 export const {

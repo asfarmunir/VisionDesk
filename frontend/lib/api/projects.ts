@@ -1,5 +1,5 @@
-import { apiClient, ApiResponse, PaginatedResponse } from './client'
-import { Project } from '../store/features/projectSlice'
+import { apiClient } from './client'
+import { Project } from '../types/project'
 
 export interface CreateProjectData {
   title: string
@@ -36,33 +36,39 @@ export interface ProjectFilters {
 
 export const projectsApi = {
   // CRUD operations
-  getProjects: (filters?: ProjectFilters): Promise<PaginatedResponse<Project>> =>
+  getProjects: (filters?: ProjectFilters): Promise<{ items: Project[]; pagination: {
+    currentPage: number
+    totalPages: number
+    totalItems: number
+    hasNextPage: boolean
+    hasPrevPage: boolean
+  }}> =>
     apiClient.get('/projects', filters as Record<string, string>),
 
-  getProject: (id: string): Promise<ApiResponse<Project>> =>
+  getProject: (id: string): Promise<Project> =>
     apiClient.get(`/projects/${id}`),
 
-  createProject: (data: CreateProjectData): Promise<ApiResponse<Project>> =>
+  createProject: (data: CreateProjectData): Promise<Project> =>
     apiClient.post('/projects', data),
 
-  updateProject: (id: string, data: UpdateProjectData): Promise<ApiResponse<Project>> =>
+  updateProject: (id: string, data: UpdateProjectData): Promise<Project> =>
     apiClient.put(`/projects/${id}`, data),
 
-  deleteProject: (id: string): Promise<ApiResponse> =>
+  deleteProject: (id: string): Promise<{ success: boolean }> =>
     apiClient.delete(`/projects/${id}`),
 
   // Team management
-  addTeamMember: (id: string, data: { userId: string; role: string }): Promise<ApiResponse<Project>> =>
+  addTeamMember: (id: string, data: { userId: string; role: string }): Promise<Project> =>
     apiClient.post(`/projects/${id}/team`, data),
 
-  updateTeamMember: (id: string, userId: string, data: { role: string }): Promise<ApiResponse<Project>> =>
+  updateTeamMember: (id: string, userId: string, data: { role: string }): Promise<Project> =>
     apiClient.put(`/projects/${id}/team/${userId}`, data),
 
-  removeTeamMember: (id: string, userId: string): Promise<ApiResponse<Project>> =>
+  removeTeamMember: (id: string, userId: string): Promise<Project> =>
     apiClient.delete(`/projects/${id}/team/${userId}`),
 
   // Project analytics
-  getProjectAnalytics: (id: string): Promise<ApiResponse<{
+  getProjectAnalytics: (id: string): Promise<{
     taskStats: {
       total: number
       completed: number
@@ -79,33 +85,33 @@ export const projectsApi = {
       activeMembers: number
     }
     progress: number
-  }>> =>
+  }> =>
     apiClient.get(`/projects/${id}/analytics`),
 
   // Bulk operations
-  bulkUpdateProjects: (data: { ids: string[]; updates: Partial<Project> }): Promise<ApiResponse<Project[]>> =>
+  bulkUpdateProjects: (data: { ids: string[]; updates: Partial<Project> }): Promise<Project[]> =>
     apiClient.put('/projects/bulk', data),
 
-  bulkDeleteProjects: (ids: string[]): Promise<ApiResponse> =>
+  bulkDeleteProjects: (ids: string[]): Promise<{ success: boolean }> =>
     apiClient.post('/projects/bulk/delete', { ids }),
 
   // Project templates
-  getProjectTemplates: (): Promise<ApiResponse<Array<{
+  getProjectTemplates: (): Promise<Array<{
     id: string
     name: string
     description: string
     structure: Partial<CreateProjectData>
-  }>>> =>
+  }>> =>
     apiClient.get('/projects/templates'),
 
-  createFromTemplate: (templateId: string, data: Partial<CreateProjectData>): Promise<ApiResponse<Project>> =>
+  createFromTemplate: (templateId: string, data: Partial<CreateProjectData>): Promise<Project> =>
     apiClient.post(`/projects/templates/${templateId}/create`, data),
 
   // Export/Import
   exportProject: (id: string, format: 'json' | 'csv' | 'pdf'): Promise<Blob> =>
     apiClient.get(`/projects/${id}/export?format=${format}`),
 
-  duplicateProject: (id: string, data: { title: string; includeTasks?: boolean }): Promise<ApiResponse<Project>> =>
+  duplicateProject: (id: string, data: { title: string; includeTasks?: boolean }): Promise<Project> =>
     apiClient.post(`/projects/${id}/duplicate`, data),
 }
 

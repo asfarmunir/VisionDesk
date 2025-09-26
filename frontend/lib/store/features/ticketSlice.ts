@@ -1,4 +1,27 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import {
+  fetchTickets,
+  fetchTicketById,
+  createTicketThunk,
+  updateTicketThunk,
+  deleteTicketThunk,
+  verifyTicketThunk,
+  closeTicketThunk,
+  fetchTicketStats
+} from '../thunks/ticketThunks'
+import { TicketStats } from '../../api/tickets'
+interface BackendTicketMinimal {
+  _id: string
+  title: string
+  description: string
+  status: string
+  resolution?: string
+  notes?: string
+  timeSpent?: number
+  verificationNotes?: string
+  createdAt?: string
+  updatedAt?: string
+}
 import { User } from './authSlice'
 
 export interface Ticket {
@@ -57,6 +80,7 @@ export interface TicketsState {
   currentTicket: Ticket | null
   isLoading: boolean
   error: string | null
+  stats: TicketStats | null
   pagination: {
     currentPage: number
     totalPages: number
@@ -85,6 +109,7 @@ const initialState: TicketsState = {
   currentTicket: null,
   isLoading: false,
   error: null,
+  stats: null,
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -199,6 +224,82 @@ const ticketSlice = createSlice({
       state.error = null
     }
   },
+  extraReducers: (builder) => {
+    // List
+    builder.addCase(fetchTickets.pending, (state) => {
+      state.isLoading = true
+      state.error = null
+    })
+    builder.addCase(fetchTickets.fulfilled, (state, action) => {
+      state.isLoading = false
+      state.error = null
+      const { tickets, pagination } = action.payload as { tickets: BackendTicketMinimal[]; pagination: TicketsState['pagination'] }
+      state.tickets = tickets as unknown as Ticket[]
+      state.pagination = pagination
+    })
+    builder.addCase(fetchTickets.rejected, (state, action) => {
+      state.isLoading = false
+      state.error = action.payload as string || 'Failed to fetch tickets'
+    })
+
+    // Single
+    builder.addCase(fetchTicketById.pending, (state) => {
+      state.isLoading = true
+      state.error = null
+    })
+    builder.addCase(fetchTicketById.fulfilled, (state, action) => {
+      state.isLoading = false
+      state.currentTicket = action.payload as unknown as Ticket
+    })
+    builder.addCase(fetchTicketById.rejected, (state, action) => {
+      state.isLoading = false
+      state.error = action.payload as string || 'Failed to load ticket'
+    })
+
+    // Create
+    builder.addCase(createTicketThunk.fulfilled, (state, action) => {
+      state.tickets.unshift(action.payload as unknown as Ticket)
+      state.pagination.totalItems += 1
+    })
+    builder.addCase(createTicketThunk.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to create ticket'
+    })
+
+    // Update (generic + verify + close reuse same logic)
+    const applyUpdate = (state: TicketsState, payload: BackendTicketMinimal) => {
+      const updated = payload as unknown as Ticket
+      const idx = state.tickets.findIndex(t => t._id === updated._id)
+      if (idx !== -1) state.tickets[idx] = updated
+      if (state.currentTicket && state.currentTicket._id === updated._id) {
+        state.currentTicket = updated
+      }
+    }
+    builder.addCase(updateTicketThunk.fulfilled, (state, action) => applyUpdate(state, action.payload))
+    builder.addCase(verifyTicketThunk.fulfilled, (state, action) => applyUpdate(state, action.payload))
+    builder.addCase(closeTicketThunk.fulfilled, (state, action) => applyUpdate(state, action.payload))
+    builder.addCase(updateTicketThunk.rejected, (state, action) => { state.error = action.payload as string || 'Failed to update ticket' })
+    builder.addCase(verifyTicketThunk.rejected, (state, action) => { state.error = action.payload as string || 'Failed to verify ticket' })
+    builder.addCase(closeTicketThunk.rejected, (state, action) => { state.error = action.payload as string || 'Failed to close ticket' })
+
+    // Delete
+    builder.addCase(deleteTicketThunk.fulfilled, (state, action) => {
+      const id = action.payload as string
+      state.tickets = state.tickets.filter(t => t._id !== id)
+      state.pagination.totalItems = Math.max(0, state.pagination.totalItems - 1)
+      if (state.currentTicket && state.currentTicket._id === id) state.currentTicket = null
+    })
+    builder.addCase(deleteTicketThunk.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to delete ticket'
+    })
+
+    // Stats
+    builder.addCase(fetchTicketStats.fulfilled, (state, action) => {
+      state.stats = action.payload as TicketStats
+    })
+    builder.addCase(fetchTicketStats.rejected, (state, action) => {
+      state.error = action.payload as string || 'Failed to load ticket stats'
+    })
+  }
 })
 
 export const {
