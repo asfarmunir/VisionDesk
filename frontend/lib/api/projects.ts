@@ -59,6 +59,12 @@ export interface FetchProjectsParams {
   priority?: string
 }
 
+export interface CreateProjectPayload {
+  title: string
+  description: string
+  priority?: Project['priority']
+}
+
 export const projectsApi = {
   async list(params: FetchProjectsParams = {}): Promise<ProjectsListResponse> {
     return apiClient.get<ProjectsListResponse>('/projects', {
@@ -69,6 +75,9 @@ export const projectsApi = {
       ...(params.priority ? { priority: params.priority } : {}),
     })
   },
+  async create(payload: CreateProjectPayload): Promise<Project> {
+    return apiClient.post<Project>('/projects', payload)
+  }
 }
 
 export default projectsApi
