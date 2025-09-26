@@ -35,7 +35,7 @@ export const useAuth = () => {
         dispatch(setLoading(true))
         const response = await authApi.validateToken()
         dispatch(loginSuccess({ 
-          user: response.data, 
+          user: response.user, 
           accessToken: storedToken, 
           refreshToken: storedToken 
         }))
@@ -59,14 +59,15 @@ export const useAuth = () => {
       dispatch(loginStart())
       
       const response = await authApi.login({ email, password })
-      localStorage.setItem('token', response.data.token)
+      console.log("🚀 ~ login ~ response:", response)
+      localStorage.setItem('token', response.accessToken)
       dispatch(loginSuccess({ 
-        user: response.data.user, 
-        accessToken: response.data.token, 
-        refreshToken: response.data.token 
+        user: response.user, 
+        accessToken: response.accessToken, 
+        refreshToken: response.refreshToken 
       }))
       
-      toast.success(`Welcome back, ${response.data.user.name}!`, { id: loadingToast })
+      toast.success(`Welcome back, ${response.user.name}!`, { id: loadingToast })
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed'
@@ -83,14 +84,14 @@ export const useAuth = () => {
       dispatch(loginStart())
       
       const response = await authApi.register({ name, email, password })
-      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('token', response.accessToken)
       dispatch(loginSuccess({ 
-        user: response.data.user, 
-        accessToken: response.data.token, 
-        refreshToken: response.data.token 
+        user: response.user, 
+        accessToken: response.accessToken, 
+        refreshToken: response.refreshToken 
       }))
       
-      toast.success(`Welcome to VisionDesk, ${response.data.user.name}! 🎉`, { id: loadingToast })
+      toast.success(`Welcome to VisionDesk, ${response.user.name}! 🎉`, { id: loadingToast })
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed'
@@ -122,7 +123,7 @@ export const useAuth = () => {
     try {
       dispatch(setLoading(true))
       const response = await authApi.updateProfile(data)
-      dispatch(updateProfileAction(response.data))
+      dispatch(updateProfileAction(response))
       toast.success('Profile updated successfully', { id: loadingToast })
       return { success: true }
     } catch (error) {

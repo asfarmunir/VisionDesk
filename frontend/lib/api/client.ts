@@ -76,7 +76,9 @@ class ApiClient {
         )
       }
 
-      return data
+      // Extract the data field from successful backend responses
+      // Backend responses are structured as: { success: true, data: {...}, message: "..." }
+      return data?.data || data
     } catch (error) {
       if (error instanceof ApiError) {
         throw error

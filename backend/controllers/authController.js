@@ -109,7 +109,6 @@ const login = async (req, res) => {
     const accessToken = generateToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
-    // Store refresh token
     refreshTokens.add(refreshToken);
 
     // Remove sensitive data from response
@@ -313,6 +312,7 @@ const changePassword = async (req, res) => {
 const verifyAuthToken = async (req, res) => {
   try {
     // If we reach here, token is valid (auth middleware passed)
+    console.log("🚀 ~ verifyAuthToken ~ req.user:", req.user)
     res.json(
       formatSuccessResponse({
         valid: true,
