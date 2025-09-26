@@ -72,10 +72,6 @@ const validateProjectCreation = [
     .trim()
     .isLength({ min: 10, max: 1000 })
     .withMessage("Project description must be between 10 and 1000 characters"),
-  body("dueDate")
-    .isISO8601()
-    .toDate()
-    .withMessage("Due date must be a valid date"),
   body("priority")
     .optional()
     .isIn(["low", "medium", "high", "urgent"])
@@ -102,11 +98,6 @@ const validateProjectUpdate = [
     .optional()
     .isIn(["active", "completed", "on-hold", "cancelled"])
     .withMessage("Status must be active, completed, on-hold, or cancelled"),
-  body("dueDate")
-    .optional()
-    .isISO8601()
-    .toDate()
-    .withMessage("Due date must be a valid date"),
   body("priority")
     .optional()
     .isIn(["low", "medium", "high", "urgent"])
@@ -176,45 +167,7 @@ const validateTaskUpdate = [
   handleValidationErrors
 ];
 
-// Ticket validation rules
-const validateTicketCreation = [
-  body("taskId")
-    .isMongoId()
-    .withMessage("Valid task ID is required"),
-  body("title")
-    .trim()
-    .isLength({ min: 3, max: 100 })
-    .withMessage("Ticket title must be between 3 and 100 characters"),
-  body("description")
-    .trim()
-    .isLength({ min: 5, max: 1000 })
-    .withMessage("Ticket description must be between 5 and 1000 characters"),
-  body("notes")
-    .trim()
-    .isLength({ min: 10, max: 2000 })
-    .withMessage("Notes must be between 10 and 2000 characters"),
-  body("timeSpent")
-    .isNumeric()
-    .isFloat({ min: 0 })
-    .withMessage("Time spent must be a positive number"),
-  body("resolution")
-    .optional()
-    .isIn(["fixed", "duplicate", "wont-fix", "cannot-reproduce", "works-as-designed"])
-    .withMessage("Resolution must be fixed, duplicate, wont-fix, cannot-reproduce, or works-as-designed"),
-  handleValidationErrors
-];
 
-const validateTicketVerification = [
-  body("status")
-    .isIn(["verified", "rejected"])
-    .withMessage("Status must be verified or rejected"),
-  body("verificationNotes")
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage("Verification notes cannot exceed 1000 characters"),
-  handleValidationErrors
-];
 
 module.exports = {
   handleValidationErrors,
@@ -225,6 +178,4 @@ module.exports = {
   validateProjectUpdate,
   validateTaskCreation,
   validateTaskUpdate,
-  validateTicketCreation,
-  validateTicketVerification
 };

@@ -65,6 +65,13 @@ export interface CreateProjectPayload {
   priority?: Project['priority']
 }
 
+export interface UpdateProjectPayload {
+  title?: string
+  description?: string
+  status?: Project['status']
+  priority?: Project['priority']
+}
+
 export const projectsApi = {
   async list(params: FetchProjectsParams = {}): Promise<ProjectsListResponse> {
     return apiClient.get<ProjectsListResponse>('/projects', {
@@ -77,6 +84,12 @@ export const projectsApi = {
   },
   async create(payload: CreateProjectPayload): Promise<Project> {
     return apiClient.post<Project>('/projects', payload)
+  },
+  async update(id: string, payload: UpdateProjectPayload): Promise<Project> {
+    return apiClient.put<Project>(`/projects/${id}`, payload)
+  },
+  async remove(id: string): Promise<null> { // backend returns success with null data on delete
+    return apiClient.delete<null>(`/projects/${id}`)
   }
 }
 

@@ -18,8 +18,21 @@ import {
   Users,
   CheckCircle2,
   AlertTriangle,
+  MoreVertical,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import AddNewProject from "@/components/shared/AddNewProject";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import EditProjectDialog from "@/components/shared/EditProjectDialog";
+import useDeleteProject from "@/hooks/useDeleteProject";
+import toast from "react-hot-toast";
 
 const statusColors: Record<Project["status"], string> = {
   active: "bg-blue-100 text-blue-700 border-blue-200",
@@ -273,25 +286,65 @@ const ProjectsPage: React.FC = () => {
 };
 
 const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
+  const { user } = useAuth(); // ensure user role available
   const completion = project.completedTaskCount ?? 0;
   const total = project.taskCount ?? 0;
   const progress =
     total > 0 ? Math.round((completion / total) * 100) : undefined;
+  const [editOpen, setEditOpen] = React.useState(false);
+  const canManage =
+    user && (user.role === "admin" || user._id === project.createdBy._id);
+  const deleteMutation = useDeleteProject(project._id, {
+    onSuccess: () => toast.success("Project deleted"),
+    onError: (e) => toast.error(e.message),
+  });
 
   return (
     <Card className="p-5 flex flex-col gap-4 hover:shadow-md transition-shadow border border-border/50">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-lg leading-tight line-clamp-2 flex-1">
+        <h3 className="font-semibold capitalize text-lg leading-tight line-clamp-2 flex-1">
           {project.title}
         </h3>
-        <span
-          className={cn(
-            "text-xs px-2 py-1 rounded-full font-medium border",
-            statusColors[project.status]
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "text-xs px-2 py-1 rounded-full font-medium border",
+              statusColors[project.status]
+            )}
+          >
+            {project.status}
+          </span>
+          {canManage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-8 w-8 inline-flex items-center justify-center rounded-md border hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="h-4 w-4" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (
+                      confirm("Delete this project? This cannot be undone.")
+                    ) {
+                      deleteMutation.mutate();
+                    }
+                  }}
+                  className="flex items-center gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-        >
-          {project.status}
-        </span>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground line-clamp-3 flex-1">
         {project.description}
@@ -336,6 +389,11 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
           </div>
         </div>
       )}
+      <EditProjectDialog
+        project={project}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </Card>
   );
 };
