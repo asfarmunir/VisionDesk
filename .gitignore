@@ -1,0 +1,11 @@
+# Node modules
+**/node_modules
+# Build
+**/.next
+**/dist
+**/build
+# Logs
+**/npm-debug.log
+**/yarn-error.log
+# Env files
+**/.env
