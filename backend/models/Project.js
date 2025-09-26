@@ -5,8 +5,6 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: [true, "Project title is required"],
     trim: true,
-    minlength: [3, "Project title must be at least 3 characters long"],
-    maxlength: [100, "Project title cannot exceed 100 characters"]
   },
   description: {
     type: String,
@@ -18,8 +16,8 @@ const projectSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ["active", "completed", "on-hold", "cancelled"],
-      message: "Status must be active, completed, on-hold, or cancelled"
+      values: ["active", "completed", "cancelled"],
+      message: "Status must be active, completed, or cancelled"
     },
     default: "active"
   },
@@ -56,26 +54,10 @@ const projectSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  dueDate: {
-    type: Date,
-  },
   completedDate: {
     type: Date
   },
-  tags: [{
-    type: String,
-    trim: true
-  }],
-  budget: {
-    type: Number,
-    min: [0, "Budget cannot be negative"]
-  },
-  progress: {
-    type: Number,
-    min: 0,
-    max: 100,
-    default: 0
-  }
+  
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -87,7 +69,6 @@ projectSchema.index({ status: 1 });
 projectSchema.index({ createdBy: 1 });
 projectSchema.index({ "teamMembers.user": 1 });
 projectSchema.index({ priority: 1 });
-projectSchema.index({ dueDate: 1 });
 
 // Virtual for tasks count
 projectSchema.virtual("taskCount", {

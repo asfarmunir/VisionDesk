@@ -5,8 +5,6 @@ const taskSchema = new mongoose.Schema({
     type: String,
     required: [true, "Task title is required"],
     trim: true,
-    minlength: [3, "Task title must be at least 3 characters long"],
-    maxlength: [100, "Task title cannot exceed 100 characters"]
   },
   description: {
     type: String,
@@ -33,8 +31,8 @@ const taskSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ["open", "in-progress", "resolved", "closed", "cancelled"],
-      message: "Status must be open, in-progress, resolved, closed, or cancelled"
+      values: ["open", "in-progress", "closed", "cancelled"],
+      message: "Status must be open, in-progress, closed, or cancelled"
     },
     default: "open"
   },
@@ -61,49 +59,8 @@ const taskSchema = new mongoose.Schema({
   },
   completedDate: {
     type: Date
-  },
-  estimatedHours: {
-    type: Number,
-    min: [0.5, "Estimated hours must be at least 0.5"],
-    max: [200, "Estimated hours cannot exceed 200"]
-  },
-  actualHours: {
-    type: Number,
-    min: [0, "Actual hours cannot be negative"],
-    default: 0
-  },
-  tags: [{
-    type: String,
-    trim: true
-  }],
-  attachments: [{
-    fileName: String,
-    fileUrl: String,
-    uploadedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    },
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  comments: [{
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
-    content: {
-      type: String,
-      required: true,
-      maxlength: [500, "Comment cannot exceed 500 characters"]
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }]
+  }
+  
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
