@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import toast from 'react-hot-toast'
 import { useAppSelector, useAppDispatch, type RootState } from '../lib/store'
 import { authApi } from '../lib/api'
 import { 
@@ -42,6 +43,7 @@ export const useAuth = () => {
         console.error('Token validation failed:', error)
         localStorage.removeItem('token')
         dispatch(loginFailure('Session expired. Please log in again.'))
+        toast.error('Session expired. Please log in again.')
       } finally {
         dispatch(setLoading(false))
       }
@@ -51,6 +53,8 @@ export const useAuth = () => {
   }, [dispatch])
 
   const login = async (email: string, password: string) => {
+    const loadingToast = toast.loading('Signing you in...')
+    
     try {
       dispatch(loginStart())
       
@@ -62,15 +66,19 @@ export const useAuth = () => {
         refreshToken: response.data.token 
       }))
       
+      toast.success(`Welcome back, ${response.data.user.name}!`, { id: loadingToast })
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed'
       dispatch(loginFailure(errorMessage))
+      toast.error(errorMessage, { id: loadingToast })
       return { success: false, error: errorMessage }
     }
   }
 
   const register = async (name: string, email: string, password: string) => {
+    const loadingToast = toast.loading('Creating your account...')
+    
     try {
       dispatch(loginStart())
       
@@ -82,20 +90,26 @@ export const useAuth = () => {
         refreshToken: response.data.token 
       }))
       
+      toast.success(`Welcome to VisionDesk, ${response.data.user.name}! 🎉`, { id: loadingToast })
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed'
       dispatch(loginFailure(errorMessage))
+      toast.error(errorMessage, { id: loadingToast })
       return { success: false, error: errorMessage }
     }
   }
 
   const logout = async () => {
+    const loadingToast = toast.loading('Signing you out...')
+    
     try {
       await authApi.logout()
+      toast.success('Signed out successfully', { id: loadingToast })
     } catch (error) {
       // Continue with logout even if API call fails
       console.error('Logout API call failed:', error)
+      toast.success('Signed out successfully', { id: loadingToast })
     } finally {
       localStorage.removeItem('token')
       dispatch(logoutAction())
@@ -103,14 +117,18 @@ export const useAuth = () => {
   }
 
   const updateProfile = async (data: Partial<User>) => {
+    const loadingToast = toast.loading('Updating profile...')
+    
     try {
       dispatch(setLoading(true))
       const response = await authApi.updateProfile(data)
       dispatch(updateProfileAction(response.data))
+      toast.success('Profile updated successfully', { id: loadingToast })
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Profile update failed'
       dispatch(setError(errorMessage))
+      toast.error(errorMessage, { id: loadingToast })
       return { success: false, error: errorMessage }
     } finally {
       dispatch(setLoading(false))

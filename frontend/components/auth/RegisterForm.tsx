@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
-import { useNotifications } from '../../hooks/useNotifications'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -19,7 +18,6 @@ interface RegisterFormProps {
 export function RegisterForm({ className, onToggleMode }: RegisterFormProps) {
   const router = useRouter()
   const { register, isLoading } = useAuth()
-  const { error: notifyError, success } = useNotifications()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -68,10 +66,7 @@ export function RegisterForm({ className, onToggleMode }: RegisterFormProps) {
     const result = await register(formData.name.trim(), formData.email, formData.password)
     
     if (result.success) {
-      success('Account Created!', 'Welcome to VisionDesk. Your account has been created successfully.')
       router.push('/dashboard')
-    } else {
-      notifyError('Registration Failed', result.error || 'Failed to create account')
     }
   }
 

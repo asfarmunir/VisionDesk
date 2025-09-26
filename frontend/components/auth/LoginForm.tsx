@@ -1,83 +1,70 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../hooks/useAuth";
-import { useNotifications } from "../../hooks/useNotifications";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Icons } from "../ui/icons";
-import { cn, isValidEmail } from "../../lib/utils";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '../../hooks/useAuth'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Icons } from '../ui/icons'
+import { cn, isValidEmail } from '../../lib/utils'
 
 interface LoginFormProps {
-  className?: string;
-  onToggleMode?: () => void;
+  className?: string
+  onToggleMode?: () => void
 }
 
 export function LoginForm({ className, onToggleMode }: LoginFormProps) {
-  const router = useRouter();
-  const { login, isLoading } = useAuth();
-  const { error: notifyError, success } = useNotifications();
-
+  const router = useRouter()
+  const { login, isLoading } = useAuth()
+  
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+    email: '',
+    password: '',
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {}
 
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required'
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = 'Please enter a valid email'
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = 'Password must be at least 6 characters'
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    
+    if (!validateForm()) return
 
-    if (!validateForm()) return;
-
-    console.log("Submitting login form with data:", formData);
-
-    const result = await login(formData.email, formData.password);
-
+    const result = await login(formData.email, formData.password)
+    
     if (result.success) {
-      success("Welcome back!", "You have been successfully logged in");
-      router.push("/dashboard");
-    } else {
-      notifyError("Login Failed", result.error || "Invalid credentials");
+      router.push('/dashboard')
     }
-  };
+  }
 
-  const handleInputChange =
-    (field: keyof typeof formData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-      // Clear error when user starts typing
-      if (errors[field]) {
-        setErrors((prev) => ({ ...prev, [field]: "" }));
-      }
-    };
+  const handleInputChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }))
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
 
   return (
     <Card className={cn("w-full max-w-lg mx-auto", className)}>
@@ -94,7 +81,7 @@ export function LoginForm({ className, onToggleMode }: LoginFormProps) {
           Sign in to your account to continue
         </CardDescription>
       </CardHeader>
-
+      
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
@@ -107,7 +94,7 @@ export function LoginForm({ className, onToggleMode }: LoginFormProps) {
                 type="email"
                 placeholder="Enter your email"
                 value={formData.email}
-                onChange={handleInputChange("email")}
+                onChange={handleInputChange('email')}
                 className={cn(
                   "h-11",
                   errors.email && "border-red-500 focus-visible:ring-red-500"
@@ -128,7 +115,7 @@ export function LoginForm({ className, onToggleMode }: LoginFormProps) {
                 type="password"
                 placeholder="Enter your password"
                 value={formData.password}
-                onChange={handleInputChange("password")}
+                onChange={handleInputChange('password')}
                 className={cn(
                   "h-11",
                   errors.password && "border-red-500 focus-visible:ring-red-500"
@@ -152,14 +139,14 @@ export function LoginForm({ className, onToggleMode }: LoginFormProps) {
                 Signing in...
               </>
             ) : (
-              "Sign In"
+              'Sign In'
             )}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{' '}
             <button
               type="button"
               onClick={onToggleMode}
@@ -184,5 +171,5 @@ export function LoginForm({ className, onToggleMode }: LoginFormProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
