@@ -156,7 +156,6 @@ const createProject = async (req, res) => {
     const project = new Project({
       title,
       description,
-      dueDate,
       priority,
       createdBy: req.user._id,
       teamMembers: teamMembers.map(member => ({
@@ -164,8 +163,6 @@ const createProject = async (req, res) => {
         role: member.role || "developer",
         joinedAt: new Date()
       })),
-      tags,
-      budget
     });
 
     await project.save();

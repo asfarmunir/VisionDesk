@@ -48,6 +48,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const { data: project, isLoading, isError, error, refetch } = useProject(id);
+  console.log("🚀 ~ ProjectDetailsPage ~ project:", project);
   const [editOpen, setEditOpen] = React.useState(false);
   const [addMemberOpen, setAddMemberOpen] = React.useState(false);
   const [addTaskOpen, setAddTaskOpen] = React.useState(false);
@@ -259,22 +260,70 @@ export default function ProjectDetailsPage() {
               )}
             </div>
             {Array.isArray(project.tasks) && project.tasks.length > 0 ? (
-              <ul className="space-y-2 max-h-64 overflow-auto pr-1">
-                {project.tasks.map((t: ProjectTask) => (
-                  <li
-                    key={t._id}
-                    className="flex items-center justify-between rounded border bg-background px-3 py-2 text-xs"
-                  >
-                    <span className="truncate font-medium max-w-[220px]">
-                      {t.title || "Untitled Task"}
-                    </span>
-                    {t.status && (
-                      <span className="ml-2 text-muted-foreground capitalize">
-                        {t.status}
-                      </span>
-                    )}
-                  </li>
-                ))}
+              <ul className="space-y-2 max-h-80 overflow-auto pr-1">
+                {project.tasks.map((t: ProjectTask) => {
+                  const priorityClass =
+                    priorityStyles[t.priority] ||
+                    "bg-muted text-muted-foreground border";
+                  const due = t.dueDate ? new Date(t.dueDate) : null;
+                  const dueLabel = due ? due.toLocaleDateString() : "—";
+                  return (
+                    <li
+                      key={t._id}
+                      className="rounded border bg-background px-3 py-2 text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium truncate max-w-[220px]">
+                          {t.title || "Untitled Task"}
+                        </span>
+                        <span
+                          className={cn(
+                            "px-1.5 py-0.5 rounded-full border capitalize",
+                            priorityClass
+                          )}
+                        >
+                          {t.priority}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                        {t.assignedTo?.name && (
+                          <span>
+                            Assignee:{" "}
+                            <span className="text-foreground">
+                              {t.assignedTo.name}
+                            </span>
+                          </span>
+                        )}
+                        <span>
+                          Status:{" "}
+                          <span className="capitalize text-foreground">
+                            {t.status}
+                          </span>
+                        </span>
+                        {due && (
+                          <span>
+                            Due:{" "}
+                            <span
+                              className={cn(
+                                t.isOverdue
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-foreground"
+                              )}
+                            >
+                              {dueLabel}
+                            </span>
+                          </span>
+                        )}
+                        {typeof t.daysRemaining === "number" && (
+                          <span>
+                            {t.daysRemaining}d{" "}
+                            {t.daysRemaining === 1 ? "left" : "remaining"}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="text-xs text-muted-foreground">

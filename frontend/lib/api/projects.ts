@@ -44,9 +44,30 @@ export interface Project {
 // Minimal placeholder; expand when task schema is available
 export interface ProjectTask {
   _id: string
-  title?: string
-  status?: string
-  // add fields as backend task model is integrated
+  id?: string
+  title: string
+  description?: string
+  status: 'open' | 'in-progress' | 'closed' | 'cancelled'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  category?: 'bug' | 'feature' | 'enhancement' | 'maintenance' | 'documentation'
+  projectId: string
+  assignedTo?: {
+    _id: string
+    name: string
+    email: string
+  }
+  createdBy?: {
+    _id: string
+    name: string
+    email: string
+  }
+  dueDate?: string
+  startDate?: string
+  completedDate?: string | null
+  isOverdue?: boolean
+  daysRemaining?: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface ProjectsPagination {
