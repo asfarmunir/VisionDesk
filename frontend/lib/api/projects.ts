@@ -16,6 +16,7 @@ export interface ProjectTeamMember {
 // Virtuals: taskCount, completedTaskCount
 export interface Project {
   _id: string
+  id?: string // some endpoints may return both id and _id
   title: string
   description: string
   status: 'active' | 'completed' | 'cancelled'
@@ -29,12 +30,23 @@ export interface Project {
   teamMembers: ProjectTeamMember[]
   startDate?: string // schema default Date.now
   completedDate?: string | null
+  progress?: number // backend may send numeric progress (even if derived)
+  tags?: string[]
+  tasks?: ProjectTask[] // optional tasks list if included
   // Virtual counts
   taskCount?: number
   completedTaskCount?: number
   // Mongoose timestamps
   createdAt: string
   updatedAt: string
+}
+
+// Minimal placeholder; expand when task schema is available
+export interface ProjectTask {
+  _id: string
+  title?: string
+  status?: string
+  // add fields as backend task model is integrated
 }
 
 export interface ProjectsPagination {
@@ -74,13 +86,26 @@ export interface UpdateProjectPayload {
 
 export const projectsApi = {
   async list(params: FetchProjectsParams = {}): Promise<ProjectsListResponse> {
-    return apiClient.get<ProjectsListResponse>('/projects', {
+    const resp = await apiClient.get<ProjectsListResponse>('/projects', {
       page: String(params.page ?? 1),
       limit: String(params.limit ?? 12),
       ...(params.search ? { search: params.search } : {}),
       ...(params.status ? { status: params.status } : {}),
       ...(params.priority ? { priority: params.priority } : {}),
     })
+    // Defensive normalization
+    return {
+      ...resp,
+      projects: Array.isArray(resp.projects) ? resp.projects : [],
+      pagination: resp.pagination
+    }
+  },
+  async get(id: string): Promise<Project> {
+    // Backend response shape: { success, data: { project: {...} } } OR sometimes direct
+    const resp = await apiClient.get<{ project?: Project } | Project>(`/projects/${id}`)
+    const project: Project = (resp as { project?: Project }).project || (resp as Project)
+    if (project && !project.id) project.id = project._id
+    return project
   },
   async create(payload: CreateProjectPayload): Promise<Project> {
     return apiClient.post<Project>('/projects', payload)

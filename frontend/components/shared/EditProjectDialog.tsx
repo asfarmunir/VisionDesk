@@ -66,6 +66,12 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!project || !formValid) return;
+    console.log("Submitting update with:", {
+      title,
+      description,
+      priority,
+      status,
+    });
     mutate({
       title: title.trim(),
       description: description.trim(),
