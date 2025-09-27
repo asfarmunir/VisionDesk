@@ -14,6 +14,17 @@ import {
   Flag,
   Loader,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import PriorityBadge from "@/components/shared/ui/PriorityBadge";
+import StatusBadge from "@/components/shared/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
 // Reuse colors logic from main projects page (could be centralized later)
@@ -379,24 +390,43 @@ const MemberProjectCard: React.FC<MemberCardProps> = ({
 
 const TaskList: React.FC<{ tasks: UserProjectTask[] }> = ({ tasks }) => {
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask();
-  const [closingTaskId, setClosingTaskId] = React.useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [closingTask, setClosingTask] = React.useState<UserProjectTask | null>(
+    null
+  );
   const [ticketText, setTicketText] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
 
   const startTask = (task: UserProjectTask) => {
     if (task.status !== "open") return;
     updateTask({ id: task._id, data: { status: "in-progress" } });
   };
 
-  const closeTask = (task: UserProjectTask) => {
-    // require ticket text
-    if (!ticketText.trim()) return;
+  const openCloseDialog = (task: UserProjectTask) => {
+    setClosingTask(task);
+    setTicketText(task.ticket || "");
+    setError(null);
+    setDialogOpen(true);
+  };
+
+  const submitClose = () => {
+    if (!closingTask) return;
+    if (!ticketText.trim()) {
+      setError("Ticket / closing note is required to close the task.");
+      return;
+    }
     updateTask(
-      { id: task._id, data: { status: "closed", ticket: ticketText.trim() } },
+      {
+        id: closingTask._id,
+        data: { status: "closed", ticket: ticketText.trim() },
+      },
       {
         onSuccess: () => {
-          setClosingTaskId(null);
+          setDialogOpen(false);
+          setClosingTask(null);
           setTicketText("");
         },
+        onError: (e) => setError(e.message),
       }
     );
   };
@@ -409,91 +439,56 @@ const TaskList: React.FC<{ tasks: UserProjectTask[] }> = ({ tasks }) => {
     );
   }
   return (
-    <ul className="divide-y divide-border/40">
-      {tasks.map((t) => (
-        <li key={t._id} className="p-3 text-xs 2xl:text-sm flex flex-col gap-1">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="font-semibold text-lg text-foreground line-clamp-1">
-                {t.title}
-              </p>
-              <p className="py-1.5 text-foreground max-w-7xl ">
-                {t.description}
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 items-end min-w-[130px]">
-              <span
-                className={cn(
-                  "w-32 text-nowrap text-center capitalize py-1 rounded-full border text-xs font-medium",
-                  priorityColors[t.priority]
+    <>
+      <ul className="divide-y divide-border/40">
+        {tasks.map((t) => (
+          <li
+            key={t._id}
+            className="p-4 rounded-md hover:bg-muted/40 transition-colors"
+          >
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="flex-1 min-w-0 space-y-1">
+                <h3 className="font-semibold text-base md:text-lg leading-tight line-clamp-1 flex items-center gap-2">
+                  {t.title}
+                  <PriorityBadge priority={t.priority} />
+                  <StatusBadge status={t.status} />
+                </h3>
+                {t.description && (
+                  <p className="text-xs 2xl:text-sm text-muted-foreground line-clamp-3 whitespace-pre-wrap max-w-7xl py-1.5">
+                    {t.description}
+                  </p>
                 )}
-              >
-                {t.priority}
-              </span>
-              <span
-                className={cn(
-                  "w-32 text-nowrap text-center capitalize  py-1 rounded-full border text-xs ",
-                  statusColors[t.status] || "bg-muted text-foreground"
-                )}
-              >
-                {t.status}
-              </span>
-              {/* Actions */}
-              {t.status === "open" && (
-                <button
-                  disabled={isUpdating}
-                  onClick={() => startTask(t)}
-                  className="text-[10px] flex items-center gap-1 px-2 py-1 rounded border bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {isUpdating ? (
-                    <Loader className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Play className="h-3 w-3" />
+                <div className="flex flex-wrap items-center gap-3 text-[10px] md:text-[11px] text-muted-foreground pt-1">
+                  {t.dueDate && (
+                    <span>Due {new Date(t.dueDate).toLocaleDateString()}</span>
                   )}
-                  Start
-                </button>
-              )}
-              {t.status === "in-progress" &&
-                (closingTaskId === t._id ? (
-                  <div className="w-full space-y-2">
-                    <textarea
-                      autoFocus
-                      placeholder="Add ticket / closing notes"
-                      value={ticketText}
-                      onChange={(e) => setTicketText(e.target.value)}
-                      className="w-full h-16 text-[10px] rounded border bg-background p-1 resize-none"
-                    />
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setClosingTaskId(null);
-                          setTicketText("");
-                        }}
-                        className="px-2 py-1 text-[10px] rounded border hover:bg-muted"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!ticketText.trim() || isUpdating}
-                        onClick={() => closeTask(t)}
-                        className="px-2 py-1 text-[10px] rounded border bg-green-600 text-white hover:bg-green-500 disabled:opacity-50 flex items-center gap-1"
-                      >
-                        {isUpdating ? (
-                          <Loader className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Flag className="h-3 w-3" />
-                        )}
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+                  {t.ticket && (
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px]">
+                      {t.ticket}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 w-full md:w-auto md:items-end">
+                {t.status === "open" && (
                   <button
                     disabled={isUpdating}
-                    onClick={() => setClosingTaskId(t._id)}
-                    className="text-[10px] flex items-center gap-1 px-2 py-1 rounded border bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50"
+                    onClick={() => startTask(t)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-blue-600 text-white text-[11px] font-medium shadow hover:bg-blue-500 disabled:opacity-50"
+                  >
+                    {isUpdating ? (
+                      <Loader className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Play className="h-3 w-3" />
+                    )}
+                    Start Task
+                  </button>
+                )}
+                {t.status === "in-progress" && (
+                  <button
+                    disabled={isUpdating}
+                    onClick={() => openCloseDialog(t)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-amber-600 text-white text-[11px] font-medium shadow hover:bg-amber-500 disabled:opacity-50"
                   >
                     {isUpdating ? (
                       <Loader className="h-3 w-3 animate-spin" />
@@ -502,24 +497,106 @@ const TaskList: React.FC<{ tasks: UserProjectTask[] }> = ({ tasks }) => {
                     )}
                     Close Task
                   </button>
-                ))}
+                )}
+                {t.status === "closed" && (
+                  <span className="text-[11px] inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
+                    <CheckCircle2 className="h-3 w-3" /> Awaiting Approval
+                  </span>
+                )}
+                {t.status === "approved" && (
+                  <span className="text-[11px] inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                    <CheckCircle2 className="h-3 w-3" /> Approved
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
-            {t.dueDate && (
-              <span className="text-[10px]">
-                Due {new Date(t.dueDate).toLocaleDateString()}
-              </span>
-            )}
-            {t.ticket && (
-              <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded">
-                {t.ticket}
-              </span>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setDialogOpen(false);
+            setClosingTask(null);
+            setError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Close Task</DialogTitle>
+            <DialogDescription>
+              Provide a ticket / closing note explaining completion details.
+              This will be reviewed for approval.
+            </DialogDescription>
+          </DialogHeader>
+          {closingTask && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-md bg-muted/40 text-sm">
+                <p className="font-medium line-clamp-1">{closingTask.title}</p>
+                {closingTask.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                    {closingTask.description}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Ticket / Closing Notes
+                </label>
+                <textarea
+                  value={ticketText}
+                  onChange={(e) => {
+                    setTicketText(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="Describe what was done, test evidence, blockers resolved, etc."
+                  className="w-full h-32 text-sm rounded-md border bg-background p-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Required. Be concise but specific.
+                </p>
+                {error && (
+                  <p className="text-[11px] text-red-500 font-medium">
+                    {error}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter className="mt-4">
+            <DialogClose asChild>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md border text-sm font-medium hover:bg-muted"
+                disabled={isUpdating}
+                onClick={() => {
+                  setClosingTask(null);
+                  setTicketText("");
+                  setError(null);
+                }}
+              >
+                Cancel
+              </button>
+            </DialogClose>
+            <button
+              type="button"
+              disabled={!ticketText.trim() || isUpdating}
+              onClick={submitClose}
+              className="px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium shadow hover:bg-green-500 disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              {isUpdating ? (
+                <Loader className="h-4 w-4 animate-spin" />
+              ) : (
+                <Flag className="h-4 w-4" />
+              )}
+              Submit & Close
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

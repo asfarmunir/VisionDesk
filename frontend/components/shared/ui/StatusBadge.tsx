@@ -22,7 +22,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "px-2 py-0.5 rounded-full border text-[11px] font-medium tracking-wide capitalize backdrop-blur-sm",
+        "px-2 text-center xl:w-24 py-0.5 rounded-full border text-[11px] font-medium tracking-wide capitalize backdrop-blur-sm",
         statusMap[status] || "bg-muted text-muted-foreground",
         className
       )}

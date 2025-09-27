@@ -33,6 +33,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const { data: project, isLoading, isError, error, refetch } = useProject(id);
+  console.log("🚀 ~ ProjectDetailsPage ~ project:", project);
   const deleteMutation = useDeleteProject(id || "", {
     onSuccess: () => {
       toast.success("Project deleted");
