@@ -26,6 +26,14 @@ import {
 import PriorityBadge from "@/components/shared/ui/PriorityBadge";
 import StatusBadge from "@/components/shared/ui/StatusBadge";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { FaChevronLeft } from "react-icons/fa";
 
 // Reuse colors logic from main projects page (could be centralized later)
 const statusColors: Record<string, string> = {
@@ -52,6 +60,9 @@ const UserProjectsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
+  // Map to Select values (Radix cannot use empty string in item values)
+  const selectStatusValue = status === "" ? "all" : status;
+  const selectPriorityValue = priority === "" ? "all" : priority;
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
   );
@@ -99,14 +110,14 @@ const UserProjectsPage: React.FC = () => {
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                 <button
                   onClick={() => setSelectedProjectId(null)}
-                  className="text-sm px-2 py-1 rounded-md border bg-background hover:bg-muted transition"
+                  className="text-sm px-2 py-2 rounded-full border bg-background hover:bg-muted transition"
                   aria-label="Back to projects"
                 >
-                  ← Back
+                  <FaChevronLeft size={18} />
                 </button>
                 <span className="line-clamp-1">{selectedProject.title}</span>
               </h1>
-              <p className="text-muted-foreground max-w-3xl whitespace-pre-line mt-2 text-sm">
+              <p className="text-muted-foreground max-w-7xl whitespace-pre-line mt-4 px-2 text-sm">
                 {selectedProject.description}
               </p>
             </>
@@ -119,7 +130,7 @@ const UserProjectsPage: React.FC = () => {
             </>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="default"
@@ -133,7 +144,7 @@ const UserProjectsPage: React.FC = () => {
             )}
             <span className="ml-2 hidden sm:inline">Refresh</span>
           </Button>
-        </div>
+        </div> */}
       </header>
 
       {!selectedProject && (
@@ -162,53 +173,44 @@ const UserProjectsPage: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-[160px]">
                 <span className="text-xs 2xl:text-sm font-medium uppercase tracking-wide text-muted-foreground">
                   Status
                 </span>
-                <div className="flex gap-2 flex-wrap">
-                  {["", "active", "completed", "cancelled"].map((val) => (
-                    <button
-                      key={val || "all"}
-                      type="button"
-                      onClick={() => setStatus(val)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-md border text-xs 2xl:text-sm font-medium transition",
-                        status === val
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : "bg-background hover:bg-muted"
-                      )}
-                    >
-                      {val === ""
-                        ? "All"
-                        : val.charAt(0).toUpperCase() + val.slice(1)}
-                    </button>
-                  ))}
-                </div>
+                <Select
+                  value={selectStatusValue}
+                  onValueChange={(v) => setStatus(v === "all" ? "" : v)}
+                >
+                  <SelectTrigger className="w-full h-9">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-[160px]">
                 <span className="text-xs 2xl:text-sm font-medium uppercase tracking-wide text-muted-foreground">
                   Priority
                 </span>
-                <div className="flex gap-2 flex-wrap">
-                  {["", "low", "medium", "high", "urgent"].map((val) => (
-                    <button
-                      key={val || "all"}
-                      type="button"
-                      onClick={() => setPriority(val)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-md border text-xs 2xl:text-sm font-medium transition",
-                        priority === val
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : "bg-background hover:bg-muted"
-                      )}
-                    >
-                      {val === ""
-                        ? "All"
-                        : val.charAt(0).toUpperCase() + val.slice(1)}
-                    </button>
-                  ))}
-                </div>
+                <Select
+                  value={selectPriorityValue}
+                  onValueChange={(v) => setPriority(v === "all" ? "" : v)}
+                >
+                  <SelectTrigger className="w-full h-9">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -256,7 +258,7 @@ const UserProjectsPage: React.FC = () => {
 
       <div className="min-h-[300px]">
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="p-4 animate-pulse space-y-4">
                 <div className="h-6 bg-muted rounded w-3/4" />
@@ -292,7 +294,7 @@ const UserProjectsPage: React.FC = () => {
             </p>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ">
             {displayed.map((p) => (
               <MemberProjectCard
                 key={p._id}
@@ -337,7 +339,7 @@ const MemberProjectCard: React.FC<MemberCardProps> = ({
           </h3>
           <span
             className={cn(
-              "text-xs 2xl:text-sm px-2 py-1 rounded-full font-medium border",
+              "text-xs 2xl:text-sm px-2 py-1 rounded-full  font-medium border",
               statusColors[project.status]
             )}
           >
@@ -613,10 +615,10 @@ const ProjectTasksView: React.FC<ProjectTasksViewProps> = ({ project }) => {
     <div className="space-y-6">
       <Card className="p-6 border border-border/60">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-3 text-xs 2xl:text-sm">
+          <div className="flex flex-wrap items-center gap-3 text-xs ">
             <span
               className={cn(
-                "px-2 py-1 rounded-full border font-medium",
+                "px-4 py-1 rounded-full border capitalize font-medium",
                 statusColors[project.status]
               )}
             >
@@ -624,16 +626,16 @@ const ProjectTasksView: React.FC<ProjectTasksViewProps> = ({ project }) => {
             </span>
             <span
               className={cn(
-                "px-2 py-1 rounded-full border font-medium",
+                "px-4 py-1 rounded-full border font-medium capitalize",
                 priorityColors[project.priority]
               )}
             >
               {project.priority}
             </span>
-            <span className="px-2 py-1 rounded-full border bg-muted text-muted-foreground font-medium">
+            <span className="px-4 py-1 rounded-full border bg-muted capitalize text-muted-foreground font-medium">
               Tasks {completion}/{total}
             </span>
-            <span className="px-2 py-1 rounded-full border bg-muted text-muted-foreground font-medium">
+            <span className="px-4 py-1 rounded-full border bg-muted capitalizetext-muted-foreground font-medium">
               Progress {progress}%
             </span>
           </div>

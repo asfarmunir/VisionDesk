@@ -22,6 +22,13 @@ import AddNewProject from "@/components/shared/AddNewProject";
 
 import EditProjectDialog from "@/components/shared/EditProjectDialog";
 import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 const statusColors: Record<Project["status"], string> = {
   active: "bg-blue-100 text-blue-700 border-blue-200",
@@ -134,6 +141,9 @@ const ProjectsPage: React.FC = () => {
 
   const pagination = data?.pagination;
 
+  const selectStatusValue = clientStatus === "" ? "all" : clientStatus;
+  const selectPriorityValue = clientPriority === "" ? "all" : clientPriority;
+
   return (
     <div className="p-6 space-y-6">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -188,57 +198,52 @@ const ProjectsPage: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-[160px]">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Status
               </span>
-              <div className="flex gap-2 flex-wrap">
-                {["", "active", "completed", "cancelled"].map((val) => (
-                  <button
-                    key={val || "all"}
-                    type="button"
-                    onClick={() =>
-                      setClientStatus(val as FilterState["status"])
-                    }
-                    className={cn(
-                      "px-3 py-1.5 rounded-md border text-xs font-medium transition",
-                      clientStatus === val
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-background hover:bg-muted"
-                    )}
-                  >
-                    {val === ""
-                      ? "All"
-                      : val.charAt(0).toUpperCase() + val.slice(1)}
-                  </button>
-                ))}
-              </div>
+              <Select
+                value={selectStatusValue}
+                onValueChange={(v) =>
+                  setClientStatus(
+                    v === "all" ? "" : (v as FilterState["status"])
+                  )
+                }
+              >
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-[160px]">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Priority
               </span>
-              <div className="flex gap-2 flex-wrap">
-                {["", "low", "medium", "high", "urgent"].map((val) => (
-                  <button
-                    key={val || "all"}
-                    type="button"
-                    onClick={() =>
-                      setClientPriority(val as FilterState["priority"])
-                    }
-                    className={cn(
-                      "px-3 py-1.5 rounded-md border text-xs font-medium transition",
-                      clientPriority === val
-                        ? "bg-secondary text-secondary-foreground border-secondary shadow-sm"
-                        : "bg-background hover:bg-muted"
-                    )}
-                  >
-                    {val === ""
-                      ? "All"
-                      : val.charAt(0).toUpperCase() + val.slice(1)}
-                  </button>
-                ))}
-              </div>
+              <Select
+                value={selectPriorityValue}
+                onValueChange={(v) =>
+                  setClientPriority(
+                    v === "all" ? "" : (v as FilterState["priority"])
+                  )
+                }
+              >
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
