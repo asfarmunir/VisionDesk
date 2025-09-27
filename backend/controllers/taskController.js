@@ -445,9 +445,9 @@ const getTaskStats = async (req, res) => {
               $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0]
             }
           },
-          resolvedTasks: {
+          approvedTasks: {
             $sum: {
-              $cond: [{ $eq: ["$status", "resolved"] }, 1, 0]
+              $cond: [{ $eq: ["$status", "approved"] }, 1, 0]
             }
           },
           closedTasks: {
@@ -461,7 +461,7 @@ const getTaskStats = async (req, res) => {
                 {
                   $and: [
                     { $lt: ["$dueDate", new Date()] },
-                    { $nin: ["$status", ["resolved", "closed"]] }
+                    { $not: [{ $in: ["$status", ["approved", "closed"]] }] }
                   ]
                 },
                 1,
@@ -479,7 +479,7 @@ const getTaskStats = async (req, res) => {
       totalTasks: 0,
       openTasks: 0,
       inProgressTasks: 0,
-      resolvedTasks: 0,
+      approvedTasks: 0,
       closedTasks: 0,
       overdueTasks: 0,
       avgEstimatedHours: 0,

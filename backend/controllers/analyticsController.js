@@ -116,7 +116,7 @@ const getDashboardAnalytics = async (req, res) => {
                 {
                   $and: [
                     { $lt: ["$dueDate", now] },
-                    { $nin: ["$status", ["approved", "closed"]] }
+                    { $not: [{ $in: ["$status", ["approved", "closed"]] }] }
                   ]
                 },
                 1,
@@ -409,7 +409,7 @@ const getTeamPerformance = async (req, res) => {
                 {
                   $and: [
                     { $lt: ["$dueDate", now] },
-                    { $nin: ["$status", ["approved", "closed"]] }
+                    { $not: [{ $in: ["$status", ["approved", "closed"]] }] }
                   ]
                 },
                 1,
