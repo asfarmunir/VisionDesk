@@ -156,7 +156,7 @@ const getAllProjectsForUserWithTasks = async (req, res) => {
       projectId: { $in: projectIds },
       assignedTo: req.user._id
     })
-      .select('_id title status priority category dueDate ticket startDate completedDate projectId createdAt updatedAt')
+      .select('_id title status priority category dueDate description ticket startDate completedDate projectId createdAt updatedAt')
       .sort({ priority: -1, dueDate: 1 })
       .lean({ virtuals: true });
 

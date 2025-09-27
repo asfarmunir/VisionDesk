@@ -84,6 +84,46 @@ export interface ProjectsListResponse {
   pagination: ProjectsPagination
 }
 
+// -------- User-specific projects with tasks (lightweight) --------
+// Endpoint: GET /projects/user
+// Returns only projects the authenticated basic user is a member of and ONLY tasks assigned to that user.
+// Shape (after backend formatSuccessResponse): { success, message, data: { projects: UserProjectWithTasks[] } }
+
+export interface UserProjectTask {
+  _id: string
+  title: string
+  status: ProjectTask['status']
+  priority: ProjectTask['priority']
+  category?: ProjectTask['category']
+  dueDate?: string
+  ticket?: string
+  startDate?: string
+  completedDate?: string | null
+  projectId: string
+  createdAt?: string
+  updatedAt?: string
+  description?: string
+}
+
+export interface UserProjectWithTasks {
+  _id: string
+  title: string
+  description: string
+  status: Project['status']
+  priority: Project['priority']
+  startDate?: string
+  completedDate?: string | null
+  createdAt: string
+  updatedAt: string
+  taskCount?: number
+  completedTaskCount?: number
+  tasks: UserProjectTask[]
+}
+
+export interface UserProjectsWithTasksResponse {
+  projects: UserProjectWithTasks[]
+}
+
 export interface FetchProjectsParams {
   page?: number
   limit?: number
@@ -167,6 +207,27 @@ export const projectsApi = {
   async addTeamMember(id: string, userId: string, role: ProjectTeamMember['role']): Promise<Project> {
     // Backend: PUT /projects/:id/team-members { userId, role }
     return apiClient.put<Project>(`/projects/${id}/team-members`, { userId, role })
+  },
+  async listUserWithTasks(): Promise<UserProjectsWithTasksResponse> {
+    // Raw shape may be: { projects: [...] } OR { data: { projects: [...] }, success, message }
+    const raw = await apiClient.get<unknown>('/projects/user')
+    const extract = (obj: unknown): UserProjectsWithTasksResponse => {
+      if (!obj || typeof obj !== 'object') return { projects: [] }
+      const o = obj as { projects?: unknown; data?: unknown }
+      if (Array.isArray(o.projects)) {
+        return { projects: o.projects as UserProjectWithTasks[] }
+      }
+      if (o.data && typeof o.data === 'object') {
+        const d = o.data as { projects?: unknown }
+        if (Array.isArray(d.projects)) {
+          return { projects: d.projects as UserProjectWithTasks[] }
+        }
+      }
+      return { projects: [] }
+    }
+    const { projects } = extract(raw)
+    // Normalize tasks array presence
+    return { projects: projects.map(p => ({ ...p, tasks: Array.isArray(p.tasks) ? p.tasks : [] })) }
   }
 }
 
