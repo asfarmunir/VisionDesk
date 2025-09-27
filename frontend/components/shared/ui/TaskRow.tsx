@@ -31,10 +31,10 @@ export function TaskRow({ task }: { task: ProjectTask }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <PriorityBadge priority={task.priority} />
-          <span className="font-medium text-xs 2xl:text-sm truncate max-w-[200px] sm:max-w-[260px]">
+          <span className="font-semibold text-xs 2xl:text-base truncate max-w-[200px] sm:max-w-[260px]">
             {task.title}
           </span>
+          <PriorityBadge priority={task.priority} />
         </div>
         <div className="flex items-center gap-2">
           {task.status === "closed" && (
@@ -59,6 +59,14 @@ export function TaskRow({ task }: { task: ProjectTask }) {
           {task.description}
         </p>
       )}
+      {task.ticket && task.ticket.trim() && (
+        <span
+          className="inline-flex items-center gap-1 mb-1 rounded bg-muted px-2 py-0.5 font-mono text-[10px] 2xl:text-xs max-w-full truncate"
+          title={task.ticket}
+        >
+          # {task.ticket}
+        </span>
+      )}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] 2xl:text-xs text-muted-foreground">
         {task.assignedTo &&
           typeof task.assignedTo === "object" &&
@@ -74,14 +82,6 @@ export function TaskRow({ task }: { task: ProjectTask }) {
         {typeof task.daysRemaining === "number" && (
           <span className={cn(task.daysRemaining < 0 && "text-rose-500")}>
             {task.daysRemaining}d left
-          </span>
-        )}
-        {task.ticket && task.ticket.trim() && (
-          <span
-            className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 font-mono text-[10px] 2xl:text-xs max-w-full truncate"
-            title={task.ticket}
-          >
-            #{task.ticket}
           </span>
         )}
       </div>

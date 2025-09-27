@@ -283,7 +283,7 @@ const ProjectsPage: React.FC = () => {
       {/* Content */}
       <div className="min-h-[300px]">
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="p-4 animate-pulse space-y-4">
                 <div className="h-6 bg-muted rounded w-3/4" />
@@ -322,7 +322,7 @@ const ProjectsPage: React.FC = () => {
           </Card>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ">
               {displayedProjects.map((project) => (
                 <ProjectCard key={project._id} project={project} />
               ))}

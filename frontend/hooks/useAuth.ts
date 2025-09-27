@@ -61,7 +61,6 @@ export const useAuth = () => {
       dispatch(loginStart())
       
       const response = await authApi.login({ email, password })
-      console.log("🚀 ~ login ~ response:", response)
       localStorage.setItem('token', response.accessToken)
       dispatch(loginSuccess({ 
         user: response.user, 
@@ -70,12 +69,12 @@ export const useAuth = () => {
       }))
       
       toast.success(`Welcome back, ${response.user.name}!`, { id: loadingToast })
-      return { success: true }
+      return { success: true as const, user: response.user }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed'
       dispatch(loginFailure(errorMessage))
       toast.error(errorMessage, { id: loadingToast })
-      return { success: false, error: errorMessage }
+      return { success: false as const, error: errorMessage }
     }
   }
 
