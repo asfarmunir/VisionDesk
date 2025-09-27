@@ -68,6 +68,7 @@ export interface ProjectTask {
   daysRemaining?: number
   createdAt?: string
   updatedAt?: string
+  ticket?: string
 }
 
 export interface ProjectsPagination {

@@ -138,7 +138,7 @@ export default function ProjectDetailsPage() {
               >
                 <ArrowLeft className="h-4 w-4" /> Back
               </Button>
-              <span className="text-xs text-white/60">
+              <span className="text-xs 2xl:text-sm text-white/60">
                 ID: {project._id.slice(-8)}
               </span>
             </div>
@@ -204,7 +204,7 @@ export default function ProjectDetailsPage() {
             accent="bg-gradient-to-r from-blue-400/70 to-transparent"
           />
           <StatCard
-            label="Team"
+            label="Team Members"
             value={project.teamMembers?.length || 0}
             accent="bg-gradient-to-r from-fuchsia-400/70 to-transparent"
           />
@@ -294,7 +294,7 @@ export default function ProjectDetailsPage() {
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs 2xl:text-sm text-muted-foreground">
                   No tasks linked yet.
                 </p>
               )}
@@ -318,7 +318,7 @@ export default function ProjectDetailsPage() {
                   </Button>
                 )}
               </div>
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between text-xs 2xl:text-sm">
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <Users className="h-4 w-4" /> Members
                 </span>
@@ -332,7 +332,7 @@ export default function ProjectDetailsPage() {
                   {project.teamMembers.map((tm) => (
                     <li
                       key={tm.user._id}
-                      className="flex items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-2 text-xs border border-white/10"
+                      className="flex items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-2 text-xs 2xl:text-sm border border-white/10"
                     >
                       <div className="flex flex-col min-w-0">
                         <span className="font-medium truncate max-w-[150px]">
@@ -347,7 +347,7 @@ export default function ProjectDetailsPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs 2xl:text-sm text-muted-foreground">
                   No team members yet.
                 </p>
               )}

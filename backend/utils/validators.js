@@ -149,8 +149,8 @@ const validateTaskUpdate = [
     .withMessage("Task description must be between 5 and 500 characters"),
   body("status")
     .optional()
-    .isIn(["open", "in-progress", "resolved", "closed", "cancelled"])
-    .withMessage("Status must be open, in-progress, resolved, closed, or cancelled"),
+    .isIn(["open", "in-progress", "closed", "approved", "cancelled"])
+    .withMessage("Status must be open, in-progress, closed, approved, or cancelled"),
   body("assignedTo")
     .optional()
     .isMongoId()

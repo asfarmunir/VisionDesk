@@ -83,7 +83,7 @@ projectSchema.virtual("completedTaskCount", {
   ref: "Task",
   localField: "_id",
   foreignField: "projectId",
-  match: { status: "resolved" },
+  match: { status: "approved" },
   count: true
 });
 
