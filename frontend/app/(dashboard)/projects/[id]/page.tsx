@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
-
+import { IoMdAdd } from "react-icons/io";
+import AddTeamMember from "@/components/shared/AddTeamMember";
 const statusStyles: Record<string, string> = {
   active: "bg-blue-100 text-blue-700 border-blue-200",
   completed: "bg-green-100 text-green-700 border-green-200",
@@ -47,6 +48,7 @@ export default function ProjectDetailsPage() {
   const { user, isAuthenticated } = useAuth();
   const { data: project, isLoading, isError, error, refetch } = useProject(id);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [addMemberOpen, setAddMemberOpen] = React.useState(false);
 
   const canManage =
     project &&
@@ -241,9 +243,12 @@ export default function ProjectDetailsPage() {
             )}
           </Card>
           <Card className="p-6 space-y-4">
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-              Tasks
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
+                Tasks
+              </h2>
+              <Button>Add Task</Button>
+            </div>
             {Array.isArray(project.tasks) && project.tasks.length > 0 ? (
               <ul className="space-y-2 max-h-64 overflow-auto pr-1">
                 {project.tasks.map((t: ProjectTask) => (
@@ -270,10 +275,20 @@ export default function ProjectDetailsPage() {
           </Card>
         </div>
         <div className="space-y-6">
-          <Card className="p-6 space-y-4">
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-              Team
-            </h2>
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
+                Team
+              </h2>
+              {canManage && (
+                <button
+                  onClick={() => setAddMemberOpen(true)}
+                  className="rounded-full bg-primary px-2 py-2 text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  <IoMdAdd size={16} />
+                </button>
+              )}
+            </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -345,6 +360,13 @@ export default function ProjectDetailsPage() {
         open={editOpen}
         onOpenChange={setEditOpen}
       />
+      {canManage && (
+        <AddTeamMember
+          projectId={project._id}
+          open={addMemberOpen}
+          onOpenChange={setAddMemberOpen}
+        />
+      )}
     </div>
   );
 }

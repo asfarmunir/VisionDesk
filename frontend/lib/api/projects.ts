@@ -115,6 +115,10 @@ export const projectsApi = {
   },
   async remove(id: string): Promise<null> { // backend returns success with null data on delete
     return apiClient.delete<null>(`/projects/${id}`)
+  },
+  async addTeamMember(id: string, userId: string, role: ProjectTeamMember['role']): Promise<Project> {
+    // Backend: PUT /projects/:id/team-members { userId, role }
+    return apiClient.put<Project>(`/projects/${id}/team-members`, { userId, role })
   }
 }
 

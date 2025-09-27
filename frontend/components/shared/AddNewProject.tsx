@@ -68,7 +68,7 @@ const AddNewProject: React.FC = () => {
       <DialogTrigger asChild>
         <Button variant="default">Add New Project</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>
