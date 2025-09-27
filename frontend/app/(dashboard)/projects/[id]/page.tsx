@@ -28,6 +28,7 @@ import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { IoMdAdd } from "react-icons/io";
 import AddTeamMember from "@/components/shared/AddTeamMember";
+import AddTaskDialog from "@/components/shared/AddTaskDialog";
 const statusStyles: Record<string, string> = {
   active: "bg-blue-100 text-blue-700 border-blue-200",
   completed: "bg-green-100 text-green-700 border-green-200",
@@ -49,6 +50,7 @@ export default function ProjectDetailsPage() {
   const { data: project, isLoading, isError, error, refetch } = useProject(id);
   const [editOpen, setEditOpen] = React.useState(false);
   const [addMemberOpen, setAddMemberOpen] = React.useState(false);
+  const [addTaskOpen, setAddTaskOpen] = React.useState(false);
 
   const canManage =
     project &&
@@ -247,7 +249,14 @@ export default function ProjectDetailsPage() {
               <h2 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
                 Tasks
               </h2>
-              <Button>Add Task</Button>
+              {canManage && (
+                <button
+                  onClick={() => setAddTaskOpen(true)}
+                  className="rounded-full bg-primary px-2 py-2 text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  <IoMdAdd size={16} />
+                </button>
+              )}
             </div>
             {Array.isArray(project.tasks) && project.tasks.length > 0 ? (
               <ul className="space-y-2 max-h-64 overflow-auto pr-1">
@@ -306,7 +315,7 @@ export default function ProjectDetailsPage() {
                   {project.teamMembers.map((tm) => (
                     <li
                       key={tm.user._id}
-                      className="flex items-center justify-between text-xs bg-muted/40 px-2 py-1 rounded"
+                      className="flex items-center justify-between text-xs bg-muted/40 p-2.5 rounded"
                     >
                       <span className="truncate max-w-[140px]">
                         {tm.user.name}
@@ -365,6 +374,13 @@ export default function ProjectDetailsPage() {
           projectId={project._id}
           open={addMemberOpen}
           onOpenChange={setAddMemberOpen}
+        />
+      )}
+      {canManage && (
+        <AddTaskDialog
+          project={project}
+          open={addTaskOpen}
+          onOpenChange={setAddTaskOpen}
         />
       )}
     </div>

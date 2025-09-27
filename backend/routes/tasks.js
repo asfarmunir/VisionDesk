@@ -37,7 +37,7 @@ router.get("/:id",
   getTaskById
 );
 
-// POST /api/tasks - Create new task (Moderator and Admin only, or project team members)
+// POST /api/tasks - Create new task (Moderator and Admin only)
 router.post("/", isModerator, validateTaskCreation, createTask);
 
 // PUT /api/tasks/:id - Update task

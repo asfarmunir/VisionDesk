@@ -45,6 +45,7 @@ const AddTeamMember: React.FC<AddTeamMemberProps> = ({
   const { data, isLoading, refetch } = useUsers({
     search: search || undefined,
     limit: 8,
+    role: "user",
   });
   const addMutation = useAddTeamMember(projectId, {
     onSuccess: () => {

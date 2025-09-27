@@ -152,8 +152,6 @@ const createTask = async (req, res) => {
       dueDate,
       priority = "medium",
       category = "feature",
-      estimatedHours,
-      tags = []
     } = req.body;
 
     // Validate project exists and user has access
@@ -203,11 +201,10 @@ const createTask = async (req, res) => {
       projectId,
       assignedTo,
       createdBy: req.user._id,
-      dueDate,
       priority,
       category,
-      estimatedHours,
-      tags
+      dueDate
+      
     });
 
     await task.save();
