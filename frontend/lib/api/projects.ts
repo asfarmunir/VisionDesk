@@ -47,7 +47,7 @@ export interface ProjectTask {
   id?: string
   title: string
   description?: string
-  status: 'open' | 'in-progress' | 'closed' | 'cancelled'
+  status: 'open' | 'in-progress' | 'closed' | 'approved' | 'cancelled'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   category?: 'bug' | 'feature' | 'enhancement' | 'maintenance' | 'documentation'
   projectId: string

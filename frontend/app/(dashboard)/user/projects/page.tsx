@@ -5,7 +5,15 @@ import { useUserProjectsWithTasks } from "@/hooks/useUserProjectsWithTasks";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RefreshCcw, Users, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  RefreshCcw,
+  Users,
+  CheckCircle2,
+  Play,
+  Flag,
+  Loader,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Reuse colors logic from main projects page (could be centralized later)
@@ -30,7 +38,6 @@ const UserProjectsPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { data, isLoading, isFetching, refetch, error } =
     useUserProjectsWithTasks();
-  console.log("🚀 ~ UserProjectsPage ~ data:", data);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
@@ -290,6 +297,7 @@ const UserProjectsPage: React.FC = () => {
 };
 
 import type { UserProjectWithTasks, UserProjectTask } from "@/lib/api/projects";
+import { useUpdateTask } from "@/hooks/useUpdateTask";
 interface MemberCardProps {
   project: UserProjectWithTasks;
   onToggle: () => void;
@@ -370,6 +378,29 @@ const MemberProjectCard: React.FC<MemberCardProps> = ({
 };
 
 const TaskList: React.FC<{ tasks: UserProjectTask[] }> = ({ tasks }) => {
+  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask();
+  const [closingTaskId, setClosingTaskId] = React.useState<string | null>(null);
+  const [ticketText, setTicketText] = React.useState("");
+
+  const startTask = (task: UserProjectTask) => {
+    if (task.status !== "open") return;
+    updateTask({ id: task._id, data: { status: "in-progress" } });
+  };
+
+  const closeTask = (task: UserProjectTask) => {
+    // require ticket text
+    if (!ticketText.trim()) return;
+    updateTask(
+      { id: task._id, data: { status: "closed", ticket: ticketText.trim() } },
+      {
+        onSuccess: () => {
+          setClosingTaskId(null);
+          setTicketText("");
+        },
+      }
+    );
+  };
+
   if (!tasks.length) {
     return (
       <div className="p-4 text-xs 2xl:text-sm text-muted-foreground italic flex items-center gap-2">
@@ -386,12 +417,14 @@ const TaskList: React.FC<{ tasks: UserProjectTask[] }> = ({ tasks }) => {
               <p className="font-semibold text-lg text-foreground line-clamp-1">
                 {t.title}
               </p>
-              <p className="py-1.5 text-foreground ">{t.description}</p>
+              <p className="py-1.5 text-foreground max-w-7xl ">
+                {t.description}
+              </p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 items-end min-w-[130px]">
               <span
                 className={cn(
-                  "px-12 text-center capitalize py-1 rounded-full border text-xs font-medium",
+                  "w-32 text-nowrap text-center capitalize py-1 rounded-full border text-xs font-medium",
                   priorityColors[t.priority]
                 )}
               >
@@ -399,12 +432,77 @@ const TaskList: React.FC<{ tasks: UserProjectTask[] }> = ({ tasks }) => {
               </span>
               <span
                 className={cn(
-                  "px-12 text-center capitalize  py-1 rounded-full border text-xs ",
+                  "w-32 text-nowrap text-center capitalize  py-1 rounded-full border text-xs ",
                   statusColors[t.status] || "bg-muted text-foreground"
                 )}
               >
                 {t.status}
               </span>
+              {/* Actions */}
+              {t.status === "open" && (
+                <button
+                  disabled={isUpdating}
+                  onClick={() => startTask(t)}
+                  className="text-[10px] flex items-center gap-1 px-2 py-1 rounded border bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+                >
+                  {isUpdating ? (
+                    <Loader className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Play className="h-3 w-3" />
+                  )}
+                  Start
+                </button>
+              )}
+              {t.status === "in-progress" &&
+                (closingTaskId === t._id ? (
+                  <div className="w-full space-y-2">
+                    <textarea
+                      autoFocus
+                      placeholder="Add ticket / closing notes"
+                      value={ticketText}
+                      onChange={(e) => setTicketText(e.target.value)}
+                      className="w-full h-16 text-[10px] rounded border bg-background p-1 resize-none"
+                    />
+                    <div className="flex gap-1 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setClosingTaskId(null);
+                          setTicketText("");
+                        }}
+                        className="px-2 py-1 text-[10px] rounded border hover:bg-muted"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!ticketText.trim() || isUpdating}
+                        onClick={() => closeTask(t)}
+                        className="px-2 py-1 text-[10px] rounded border bg-green-600 text-white hover:bg-green-500 disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {isUpdating ? (
+                          <Loader className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Flag className="h-3 w-3" />
+                        )}
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    disabled={isUpdating}
+                    onClick={() => setClosingTaskId(t._id)}
+                    className="text-[10px] flex items-center gap-1 px-2 py-1 rounded border bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50"
+                  >
+                    {isUpdating ? (
+                      <Loader className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Flag className="h-3 w-3" />
+                    )}
+                    Close Task
+                  </button>
+                ))}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-muted-foreground">

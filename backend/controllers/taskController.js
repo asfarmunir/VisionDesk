@@ -237,9 +237,7 @@ const updateTask = async (req, res) => {
       dueDate,
       assignedTo,
       category,
-      estimatedHours,
-      actualHours,
-      tags
+      ticket
     } = req.body;
 
     const task = await Task.findById(id).populate("projectId");
@@ -276,11 +274,8 @@ const updateTask = async (req, res) => {
     if (priority) updates.priority = priority;
     if (dueDate) updates.dueDate = dueDate;
     if (category) updates.category = category;
-    if (typeof estimatedHours === "number") updates.estimatedHours = estimatedHours;
-    if (typeof actualHours === "number") updates.actualHours = actualHours;
-    if (tags) updates.tags = tags;
+    if (ticket) updates.ticket = ticket;
 
-    // Status can be updated by assigned user or higher permissions
     if (status && (isTaskAssigned || isTaskCreator || isProjectCreator || isAdmin)) {
       updates.status = status;
     }
