@@ -1,4 +1,4 @@
-const { User, Project, Task, Ticket } = require("../models");
+const { User, Project, Task } = require("../models");
 const {
   formatSuccessResponse,
   formatErrorResponse
@@ -28,14 +28,12 @@ const getDashboardAnalytics = async (req, res) => {
     }
 
     // Build role-based filters
-    let projectFilter = {};
-    let taskFilter = {};
-    let ticketFilter = {};
+  let projectFilter = {};
+  let taskFilter = {};
 
     if (req.user.role === "user") {
       // Users see only their assigned tasks and related data
       taskFilter.assignedTo = req.user._id;
-      ticketFilter.resolvedBy = req.user._id;
       
       // Get projects where user is a team member
       const userProjects = await Project.find({
@@ -57,10 +55,6 @@ const getDashboardAnalytics = async (req, res) => {
       projectFilter._id = { $in: projectIds };
       taskFilter.projectId = { $in: projectIds };
       
-      // Get tasks from these projects for ticket filter
-      const tasks = await Task.find({ projectId: { $in: projectIds } }).select("_id");
-      const taskIds = tasks.map(t => t._id);
-      ticketFilter.taskId = { $in: taskIds };
     }
     // Admins see everything (no filters needed)
 
@@ -76,9 +70,6 @@ const getDashboardAnalytics = async (req, res) => {
           },
           completedProjects: {
             $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
-          },
-          onHoldProjects: {
-            $sum: { $cond: [{ $eq: ["$status", "on-hold"] }, 1, 0] }
           },
           averageProgress: { $avg: "$progress" }
         }
@@ -113,8 +104,8 @@ const getDashboardAnalytics = async (req, res) => {
           inProgressTasks: {
             $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] }
           },
-          resolvedTasks: {
-            $sum: { $cond: [{ $eq: ["$status", "resolved"] }, 1, 0] }
+          approvedTasks: {
+            $sum: { $cond: [{ $eq: ["$status", "approved"] }, 1, 0] }
           },
           closedTasks: {
             $sum: { $cond: [{ $eq: ["$status", "closed"] }, 1, 0] }
@@ -125,7 +116,7 @@ const getDashboardAnalytics = async (req, res) => {
                 {
                   $and: [
                     { $lt: ["$dueDate", now] },
-                    { $nin: ["$status", ["resolved", "closed"]] }
+                    { $nin: ["$status", ["approved", "closed"]] }
                   ]
                 },
                 1,
@@ -148,38 +139,15 @@ const getDashboardAnalytics = async (req, res) => {
       }
     ]);
 
-    // Get ticket analytics
-    const ticketStats = await Ticket.aggregate([
-      { $match: { ...ticketFilter, resolvedAt: { $gte: startDate } } },
+    // Derive lightweight "approval" analytics from tasks (closed vs approved)
+    const approvalStats = await Task.aggregate([
+      { $match: { ...taskFilter, updatedAt: { $gte: startDate }, status: { $in: ["closed", "approved"] } } },
       {
         $group: {
           _id: null,
-          totalTickets: { $sum: 1 },
-          pendingTickets: {
-            $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] }
-          },
-          verifiedTickets: {
-            $sum: { $cond: [{ $eq: ["$status", "verified"] }, 1, 0] }
-          },
-          rejectedTickets: {
-            $sum: { $cond: [{ $eq: ["$status", "rejected"] }, 1, 0] }
-          },
-          closedTickets: {
-            $sum: { $cond: [{ $eq: ["$status", "closed"] }, 1, 0] }
-          },
-          totalTimeSpent: { $sum: "$timeSpent" },
-          averageTimeSpent: { $avg: "$timeSpent" }
-        }
-      }
-    ]);
-
-    // Get ticket resolution types
-    const resolutionStats = await Ticket.aggregate([
-      { $match: { ...ticketFilter, resolvedAt: { $gte: startDate }, resolution: { $exists: true } } },
-      {
-        $group: {
-          _id: "$resolution",
-          count: { $sum: 1 }
+          totalClosedOrApproved: { $sum: 1 },
+          closedPendingApproval: { $sum: { $cond: [{ $eq: ["$status", "closed"] }, 1, 0] } },
+          fullyApproved: { $sum: { $cond: [{ $eq: ["$status", "approved"] }, 1, 0] } }
         }
       }
     ]);
@@ -188,7 +156,6 @@ const getDashboardAnalytics = async (req, res) => {
     let userPerformance = null;
     if (req.user.role !== "user") {
       let userTaskFilter = taskFilter;
-      let userTicketFilter = ticketFilter;
 
       userPerformance = await Task.aggregate([
         { $match: { ...userTaskFilter, updatedAt: { $gte: startDate } } },
@@ -196,9 +163,7 @@ const getDashboardAnalytics = async (req, res) => {
           $group: {
             _id: "$assignedTo",
             totalTasks: { $sum: 1 },
-            completedTasks: {
-              $sum: { $cond: [{ $in: ["$status", ["resolved", "closed"]] }, 1, 0] }
-            },
+            completedTasks: { $sum: { $cond: [{ $in: ["$status", ["approved", "closed"]] }, 1, 0] } },
             averageActualHours: { $avg: "$actualHours" }
           }
         },
@@ -274,7 +239,7 @@ const getDashboardAnalytics = async (req, res) => {
           totalProjects: 0,
           activeProjects: 0,
           completedProjects: 0,
-          onHoldProjects: 0,
+          // onHoldProjects removed (status not supported),
           averageProgress: 0
         },
         trend: projectTrend
@@ -284,7 +249,7 @@ const getDashboardAnalytics = async (req, res) => {
           totalTasks: 0,
           openTasks: 0,
           inProgressTasks: 0,
-          resolvedTasks: 0,
+          approvedTasks: 0,
           closedTasks: 0,
           overdueTasks: 0
         },
@@ -293,20 +258,12 @@ const getDashboardAnalytics = async (req, res) => {
           return acc;
         }, {})
       },
-      tickets: {
-        stats: ticketStats[0] || {
-          totalTickets: 0,
-          pendingTickets: 0,
-          verifiedTickets: 0,
-          rejectedTickets: 0,
-          closedTickets: 0,
-          totalTimeSpent: 0,
-          averageTimeSpent: 0
-        },
-        resolutionDistribution: resolutionStats.reduce((acc, item) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {})
+      approvals: {
+        stats: approvalStats[0] || {
+          totalClosedOrApproved: 0,
+          closedPendingApproval: 0,
+          fullyApproved: 0
+        }
       },
       userPerformance,
       recentActivities
@@ -441,7 +398,7 @@ const getTeamPerformance = async (req, res) => {
           _id: "$assignedTo",
           totalTasks: { $sum: 1 },
           completedTasks: {
-            $sum: { $cond: [{ $in: ["$status", ["resolved", "closed"]] }, 1, 0] }
+            $sum: { $cond: [{ $in: ["$status", ["approved", "closed"]] }, 1, 0] }
           },
           inProgressTasks: {
             $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] }
@@ -452,7 +409,7 @@ const getTeamPerformance = async (req, res) => {
                 {
                   $and: [
                     { $lt: ["$dueDate", now] },
-                    { $nin: ["$status", ["resolved", "closed"]] }
+                    { $nin: ["$status", ["approved", "closed"]] }
                   ]
                 },
                 1,

@@ -1,4 +1,4 @@
-const { Task, Project, User, Ticket } = require("../models");
+const { Task, Project, User } = require("../models");
 const {
   formatSuccessResponse,
   formatErrorResponse,
@@ -122,16 +122,9 @@ const getTaskById = async (req, res) => {
       );
     }
 
-    // Get task tickets
-    const tickets = await Ticket.find({ taskId: id })
-      .populate("resolvedBy verifiedBy", "name email")
-      .sort({ resolvedAt: -1 });
-
+    // Return task (tickets model removed; ticket info now inline on task)
     res.json(
-      formatSuccessResponse({
-        task,
-        tickets
-      }, "Task retrieved successfully")
+      formatSuccessResponse({ task }, "Task retrieved successfully")
     );
   } catch (error) {
     console.error("Get task by ID error:", error);
@@ -345,14 +338,6 @@ const deleteTask = async (req, res) => {
     if (!isTaskCreator && !isProjectCreator && !isAdmin) {
       return res.status(403).json(
         formatErrorResponse("You don't have permission to delete this task", 403)
-      );
-    }
-
-    // Check if task has tickets
-    const ticketCount = await Ticket.countDocuments({ taskId: id });
-    if (ticketCount > 0) {
-      return res.status(400).json(
-        formatErrorResponse("Cannot delete task with existing tickets", 400)
       );
     }
 

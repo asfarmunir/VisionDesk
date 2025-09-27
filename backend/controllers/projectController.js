@@ -517,11 +517,6 @@ const getProjectStats = async (req, res) => {
               $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
             }
           },
-          onHoldProjects: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "on-hold"] }, 1, 0]
-            }
-          },
           avgProgress: { $avg: "$progress" },
           totalBudget: { $sum: "$budget" }
         }
@@ -532,7 +527,7 @@ const getProjectStats = async (req, res) => {
       totalProjects: 0,
       activeProjects: 0,
       completedProjects: 0,
-      onHoldProjects: 0,
+      // onHoldProjects removed (unsupported status),
       avgProgress: 0,
       totalBudget: 0
     };
