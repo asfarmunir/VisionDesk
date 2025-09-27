@@ -31,8 +31,8 @@ const taskSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ["open", "in-progress", "closed", "cancelled"],
-      message: "Status must be open, in-progress, closed, or cancelled"
+      values: ["open", "in-progress", "closed", "approved", "cancelled"],
+      message: "Status must be open, in-progress, closed, approved, or cancelled"
     },
     default: "open"
   },
@@ -59,7 +59,11 @@ const taskSchema = new mongoose.Schema({
   },
   completedDate: {
     type: Date
-  }
+  },
+  ticket: {
+    type: String,
+    trim: true,
+  },
   
 }, {
   timestamps: true,

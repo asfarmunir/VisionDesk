@@ -122,11 +122,38 @@ export const projectsApi = {
     }
   },
   async get(id: string): Promise<Project> {
-    // Backend response shape: { success, data: { project: {...} } } OR sometimes direct
-    const resp = await apiClient.get<{ project?: Project } | Project>(`/projects/${id}`)
-    const project: Project = (resp as { project?: Project }).project || (resp as Project)
-    if (project && !project.id) project.id = project._id
-    return project
+    // The controller returns formatSuccessResponse({ project, tasks })
+    // Some apiClient implementations may already unwrap to data; handle all shapes safely.
+  type ProjectGetShape = Project | { project: Project; tasks?: ProjectTask[] } | { data: { project: Project; tasks?: ProjectTask[] } }
+  const raw = await apiClient.get<ProjectGetShape>(`/projects/${id}`)
+    // Possible shapes:
+    // 1. { project, tasks }
+    // 2. { data: { project, tasks }, success, message }
+    // 3. { success, data: { project }, ... }
+    // 4. Direct project object
+    const extract = (obj: ProjectGetShape): Project => {
+      if (!obj || typeof obj !== 'object') return obj as Project
+      // Shape 1
+      if ('project' in obj) {
+        const p = obj.project
+        if (Array.isArray((obj as { tasks?: ProjectTask[] }).tasks)) {
+          p.tasks = (obj as { tasks?: ProjectTask[] }).tasks
+        }
+        return p
+      }
+      // Shape 2 / 3
+      if ('data' in obj && obj.data && typeof obj.data === 'object') {
+        const d = obj.data as { project: Project; tasks?: ProjectTask[] }
+        if (d.project) {
+          const p = d.project
+          if (Array.isArray(d.tasks)) p.tasks = d.tasks
+          return p
+        }
+      }
+      // Shape 4: ensure tasks already present or undefined
+      return obj as Project
+    }
+    return extract(raw)
   },
   async create(payload: CreateProjectPayload): Promise<Project> {
     return apiClient.post<Project>('/projects', payload)
