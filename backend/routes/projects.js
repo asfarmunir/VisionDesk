@@ -7,7 +7,8 @@ const {
   deleteProject,
   addTeamMember,
   removeTeamMember,
-  getProjectStats
+  getProjectStats,
+  getAllProjectsForUserWithTasks
 } = require("../controllers/projectController");
 const { authenticate, isModerator, canAccessProject } = require("../middleware/auth");
 const {
@@ -24,6 +25,9 @@ router.use(authenticate);
 
 // GET /api/projects - Get all projects (role-based access)
 router.get("/", getAllProjects);
+
+// GET /api/projects/user - Get all projects for the authenticated user with their tasks
+router.get("/user", getAllProjectsForUserWithTasks);
 
 // GET /api/projects/stats - Get project statistics
 router.get("/stats", getProjectStats);

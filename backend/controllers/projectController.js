@@ -127,6 +127,75 @@ const getProjectById = async (req, res) => {
   }
 };
 
+// Get all projects (for standard "user" role) the user is a member of, including ONLY tasks assigned to that user
+const getAllProjectsForUserWithTasks = async (req, res) => {
+  try {
+    // Ensure endpoint is only for basic user role (admins/moderators should use existing endpoints)
+    if (req.user.role !== 'user') {
+      return res.status(403).json(
+        formatErrorResponse('Endpoint restricted to user role', 403)
+      );
+    }
+
+    // Fetch projects where the user is explicitly a team member
+    const projects = await Project.find({ 'teamMembers.user': req.user._id })
+      .select('_id title description status priority startDate completedDate createdAt updatedAt')
+      .sort({ createdAt: -1 })
+      .lean({ virtuals: true }); // include virtual counts if needed client-side
+
+    if (!projects.length) {
+      return res.json(
+        formatSuccessResponse({ projects: [] }, 'No projects found for user')
+      );
+    }
+
+    const projectIds = projects.map(p => p._id);
+
+    // Fetch only tasks assigned to the current user across these projects
+    const tasks = await Task.find({
+      projectId: { $in: projectIds },
+      assignedTo: req.user._id
+    })
+      .select('_id title status priority category dueDate ticket startDate completedDate projectId createdAt updatedAt')
+      .sort({ priority: -1, dueDate: 1 })
+      .lean({ virtuals: true });
+
+    // Group tasks by projectId
+    const tasksByProject = tasks.reduce((acc, t) => {
+      const pid = t.projectId.toString();
+      if (!acc[pid]) acc[pid] = [];
+      acc[pid].push(t);
+      return acc;
+    }, {});
+
+    // Shape response: project + tasks (no teamMembers / createdBy leakage)
+    const shaped = projects.map(p => ({
+      _id: p._id,
+      title: p.title,
+      description: p.description,
+      status: p.status,
+      priority: p.priority,
+      startDate: p.startDate,
+      completedDate: p.completedDate,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      // Provide virtual counts if present (optional)
+      taskCount: p.taskCount,
+      completedTaskCount: p.completedTaskCount,
+      tasks: tasksByProject[p._id.toString()] || []
+    }));
+
+    res.json(
+      formatSuccessResponse({ projects: shaped }, 'User projects with assigned tasks retrieved successfully')
+    );
+  } catch (error) {
+    console.error('Get user projects with tasks error:', error);
+    res.status(500).json(
+      formatErrorResponse('Failed to retrieve user projects with tasks', 500)
+    );
+  }
+};
+
 // Create new project (Moderator and Admin only)
 const createProject = async (req, res) => {
   try {
@@ -192,11 +261,7 @@ const updateProject = async (req, res) => {
       description,
       status,
       priority,
-      dueDate,
       teamMembers,
-      tags,
-      budget,
-      progress
     } = req.body;
 
     const project = await Project.findById(id);
@@ -224,14 +289,8 @@ const updateProject = async (req, res) => {
     if (description) updates.description = description;
     if (status) updates.status = status;
     if (priority) updates.priority = priority;
-    if (dueDate) updates.dueDate = dueDate;
-    if (tags) updates.tags = tags;
-    if (typeof budget === "number") updates.budget = budget;
-    if (typeof progress === "number") updates.progress = Math.min(100, Math.max(0, progress));
 
-    // Handle team members update
     if (teamMembers) {
-      // Validate team members exist
       const userIds = teamMembers.map(member => member.user);
       const users = await User.find({ _id: { $in: userIds } });
       
@@ -497,5 +556,6 @@ module.exports = {
   deleteProject,
   addTeamMember,
   removeTeamMember,
-  getProjectStats
+  getProjectStats,
+  getAllProjectsForUserWithTasks
 };

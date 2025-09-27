@@ -63,6 +63,7 @@ const taskSchema = new mongoose.Schema({
   ticket: {
     type: String,
     trim: true,
+    default: ""
   },
   
 }, {
