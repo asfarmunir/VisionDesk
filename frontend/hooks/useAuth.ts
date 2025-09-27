@@ -13,11 +13,13 @@ import {
   clearError,
   type User 
 } from '../lib/store/features/authSlice'
+import { useRouter } from 'next/navigation'
 
 export const useAuth = () => {
   const dispatch = useAppDispatch()
   const { user, accessToken, isAuthenticated, isLoading, error } = useAppSelector((state: RootState) => state.auth)
   const initialized = useRef(false)
+  const router = useRouter();
 
   // Initialize auth state on mount
   useEffect(() => {
@@ -107,6 +109,7 @@ export const useAuth = () => {
     try {
       await authApi.logout()
       toast.success('Signed out successfully', { id: loadingToast })
+      router.push('/')
     } catch (error) {
       // Continue with logout even if API call fails
       console.error('Logout API call failed:', error)
