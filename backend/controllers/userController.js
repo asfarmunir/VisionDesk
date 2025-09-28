@@ -6,7 +6,6 @@ const {
   getSkipValue
 } = require("../utils/helpers");
 
-// Get all users (Admin only)
 const getAllUsers = async (req, res) => {
   try {
     const {
@@ -61,7 +60,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// Get single user by ID
 const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,7 +83,6 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Create new user (Admin only)
 const createUser = async (req, res) => {
   try {
     const { name, email, password, role = "user" } = req.body;
@@ -119,7 +116,6 @@ const createUser = async (req, res) => {
   }
 };
 
-// Update user (Admin only or own profile)
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -187,7 +183,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// Delete user (Admin only)
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -222,7 +217,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// Get user statistics (Admin only)
 const getUserStats = async (req, res) => {
   try {
     const stats = await User.aggregate([
@@ -273,7 +267,6 @@ const getUserStats = async (req, res) => {
   }
 };
 
-// Assign role to user (Admin only)
 const assignRole = async (req, res) => {
   try {
     const { id } = req.params;

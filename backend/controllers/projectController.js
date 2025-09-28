@@ -6,7 +6,6 @@ const {
   getSkipValue
 } = require("../utils/helpers");
 
-// Get all projects (role-based access)
 const getAllProjects = async (req, res) => {
   try {
     const {
@@ -79,7 +78,6 @@ const getAllProjects = async (req, res) => {
   }
 };
 
-// Get single project by ID
 const getProjectById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,7 +125,6 @@ const getProjectById = async (req, res) => {
   }
 };
 
-// Get all projects (for standard "user" role) the user is a member of, including ONLY tasks assigned to that user
 const getAllProjectsForUserWithTasks = async (req, res) => {
   try {
     // Ensure endpoint is only for basic user role (admins/moderators should use existing endpoints)
@@ -196,7 +193,6 @@ const getAllProjectsForUserWithTasks = async (req, res) => {
   }
 };
 
-// Create new project (Moderator and Admin only)
 const createProject = async (req, res) => {
   try {
     const {
@@ -252,7 +248,6 @@ const createProject = async (req, res) => {
   }
 };
 
-// Update project
 const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -326,7 +321,6 @@ const updateProject = async (req, res) => {
   }
 };
 
-// Delete project
 const deleteProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -374,7 +368,6 @@ const deleteProject = async (req, res) => {
   }
 };
 
-// Add team member to project
 const addTeamMember = async (req, res) => {
   try {
     const { id } = req.params;
@@ -441,52 +434,6 @@ const addTeamMember = async (req, res) => {
   }
 };
 
-// Remove team member from project
-const removeTeamMember = async (req, res) => {
-  try {
-    const { id, userId } = req.params;
-
-    const project = await Project.findById(id);
-    
-    if (!project) {
-      return res.status(404).json(
-        formatErrorResponse("Project not found", 404)
-      );
-    }
-
-    // Check permissions
-    const isCreator = project.createdBy.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "admin";
-
-    if (!isCreator && !isAdmin) {
-      return res.status(403).json(
-        formatErrorResponse("Only project creator or admin can remove team members", 403)
-      );
-    }
-
-    // Remove team member
-    project.teamMembers = project.teamMembers.filter(
-      member => member.user.toString() !== userId
-    );
-
-    await project.save();
-
-    const updatedProject = await Project.findById(id)
-      .populate("createdBy", "name email role")
-      .populate("teamMembers.user", "name email role");
-
-    res.json(
-      formatSuccessResponse(updatedProject, "Team member removed successfully")
-    );
-  } catch (error) {
-    console.error("Remove team member error:", error);
-    res.status(500).json(
-      formatErrorResponse("Failed to remove team member", 500)
-    );
-  }
-};
-
-// Get project statistics
 const getProjectStats = async (req, res) => {
   try {
     let matchStage = {};
@@ -550,7 +497,6 @@ module.exports = {
   updateProject,
   deleteProject,
   addTeamMember,
-  removeTeamMember,
   getProjectStats,
   getAllProjectsForUserWithTasks
 };

@@ -12,7 +12,6 @@ const {
 } = require("../controllers/projectController");
 const { authenticate, isModerator, canAccessProject } = require("../middleware/auth");
 const {
-  validateProjectCreation,
   validateProjectUpdate,
   handleValidationErrors
 } = require("../utils/validators");
@@ -72,14 +71,6 @@ router.put("/:id/team-members",
   addTeamMember
 );
 
-router.delete("/:id/team-members/:userId",
-  [
-    param("id").isMongoId().withMessage("Invalid project ID"),
-    param("userId").isMongoId().withMessage("Invalid user ID"),
-    handleValidationErrors
-  ],
-  canAccessProject,
-  removeTeamMember
-);
+
 
 module.exports = router;

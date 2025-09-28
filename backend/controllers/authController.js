@@ -7,10 +7,8 @@ const {
   formatErrorResponse 
 } = require("../utils/helpers");
 
-// Store refresh tokens (In production, use Redis or database)
 const refreshTokens = new Set();
 
-// Register new user
 const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -72,7 +70,6 @@ const register = async (req, res) => {
   }
 };
 
-// Login user
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -130,7 +127,6 @@ const login = async (req, res) => {
   }
 };
 
-// Refresh access token
 const refreshAccessToken = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -186,13 +182,11 @@ const refreshAccessToken = async (req, res) => {
   }
 };
 
-// Logout user
 const logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     if (refreshToken) {
-      // Remove refresh token from store
       refreshTokens.delete(refreshToken);
     }
 
@@ -207,108 +201,7 @@ const logout = async (req, res) => {
   }
 };
 
-// Get current user profile
-const getProfile = async (req, res) => {
-  try {
-    // User is already available from auth middleware
-    res.json(
-      formatSuccessResponse(req.user, "Profile retrieved successfully")
-    );
-  } catch (error) {
-    console.error("Get profile error:", error);
-    res.status(500).json(
-      formatErrorResponse("Server error retrieving profile", 500)
-    );
-  }
-};
 
-// Update current user profile
-const updateProfile = async (req, res) => {
-  try {
-    const { name, email } = req.body;
-    const userId = req.user._id;
-
-    // Check if email is being changed and if it's already taken
-    if (email && email !== req.user.email) {
-      const existingUser = await User.findByEmail(email);
-      if (existingUser && existingUser._id.toString() !== userId.toString()) {
-        return res.status(400).json(
-          formatErrorResponse("Email is already in use by another account.", 400)
-        );
-      }
-    }
-
-    // Update user
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
-    res.json(
-      formatSuccessResponse(updatedUser, "Profile updated successfully")
-    );
-  } catch (error) {
-    console.error("Update profile error:", error);
-    
-    if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors).map(err => ({
-        field: err.path,
-        message: err.message
-      }));
-      return res.status(400).json(
-        formatErrorResponse("Validation failed", 400, errors)
-      );
-    }
-
-    res.status(500).json(
-      formatErrorResponse("Server error updating profile", 500)
-    );
-  }
-};
-
-// Change password
-const changePassword = async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    const userId = req.user._id;
-
-    // Get user with password
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json(
-        formatErrorResponse("User not found.", 404)
-      );
-    }
-
-    // Verify current password
-    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json(
-        formatErrorResponse("Current password is incorrect.", 400)
-      );
-    }
-
-    // Update password
-    user.passwordHash = newPassword; // Will be hashed by pre-save middleware
-    await user.save();
-
-    res.json(
-      formatSuccessResponse(null, "Password changed successfully")
-    );
-  } catch (error) {
-    console.error("Change password error:", error);
-    res.status(500).json(
-      formatErrorResponse("Server error changing password", 500)
-    );
-  }
-};
-
-// Verify token endpoint (useful for frontend to check token validity)
 const verifyAuthToken = async (req, res) => {
   try {
     // If we reach here, token is valid (auth middleware passed)
@@ -332,8 +225,5 @@ module.exports = {
   login,
   refreshAccessToken,
   logout,
-  getProfile,
-  updateProfile,
-  changePassword,
   verifyAuthToken
 };
