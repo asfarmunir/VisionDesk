@@ -1,18 +1,15 @@
 const jwt = require("jsonwebtoken");
 
-// Generate JWT token
 const generateToken = (payload, secret = process.env.JWT_SECRET, expiresIn = process.env.JWT_EXPIRE) => {
   return jwt.sign(payload, secret, { expiresIn });
 };
 
-// Generate refresh token
 const generateRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { 
     expiresIn: process.env.JWT_REFRESH_EXPIRE 
   });
 };
 
-// Verify JWT token
 const verifyToken = (token, secret = process.env.JWT_SECRET) => {
   try {
     return jwt.verify(token, secret);
@@ -21,7 +18,6 @@ const verifyToken = (token, secret = process.env.JWT_SECRET) => {
   }
 };
 
-// Generate random string
 const generateRandomString = (length = 32) => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -31,7 +27,6 @@ const generateRandomString = (length = 32) => {
   return result;
 };
 
-// Format error response
 const formatErrorResponse = (message, statusCode = 500, errors = null) => {
   return {
     success: false,
@@ -42,7 +37,6 @@ const formatErrorResponse = (message, statusCode = 500, errors = null) => {
   };
 };
 
-// Format success response
 const formatSuccessResponse = (data, message = "Success", statusCode = 200) => {
   return {
     success: true,
@@ -53,7 +47,6 @@ const formatSuccessResponse = (data, message = "Success", statusCode = 200) => {
   };
 };
 
-// Pagination helper
 const getPaginationData = (page = 1, limit = 10, total = 0) => {
   const currentPage = parseInt(page);
   const itemsPerPage = parseInt(limit);
@@ -73,7 +66,6 @@ const getPaginationData = (page = 1, limit = 10, total = 0) => {
   };
 };
 
-// Calculate skip value for pagination
 const getSkipValue = (page = 1, limit = 10) => {
   return (parseInt(page) - 1) * parseInt(limit);
 };

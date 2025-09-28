@@ -19,7 +19,6 @@ const {
 
 const router = express.Router();
 
-// Public routes
 router.post("/register", validateUserRegistration, register);
 router.post("/login", validateUserLogin, login);
 router.post("/refresh", 
@@ -32,8 +31,7 @@ router.post("/refresh",
   refreshAccessToken
 );
 
-// Protected routes (require authentication)
-router.use(authenticate); // All routes below this will require authentication
+router.use(authenticate); 
 
 router.post("/logout", logout);
 router.get("/profile", getProfile);

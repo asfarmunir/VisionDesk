@@ -10,22 +10,10 @@ const { handleValidationErrors } = require("../utils/validators");
 
 const router = express.Router();
 
-// All routes require authentication
 router.use(authenticate);
 
-// GET /api/analytics/dashboard - Get comprehensive dashboard analytics
-router.get("/dashboard",
-  [
-    query("timeFrame")
-      .optional()
-      .isIn(["7d", "30d", "90d", "1y"])
-      .withMessage("Time frame must be 7d, 30d, 90d, or 1y"),
-    handleValidationErrors
-  ],
-  getDashboardAnalytics
-);
+router.get("/dashboard",getDashboardAnalytics);
 
-// GET /api/analytics/project-completion - Get project completion trend
 router.get("/project-completion",
   [
     query("days")
@@ -37,7 +25,6 @@ router.get("/project-completion",
   getProjectCompletionTrend
 );
 
-// GET /api/analytics/team-performance - Get team performance analytics (Moderator and Admin only)
 router.get("/team-performance",
   [
     query("projectId")

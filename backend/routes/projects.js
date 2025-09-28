@@ -20,19 +20,14 @@ const { body, param } = require("express-validator");
 
 const router = express.Router();
 
-// All routes require authentication
 router.use(authenticate);
 
-// GET /api/projects - Get all projects (role-based access)
 router.get("/", getAllProjects);
 
-// GET /api/projects/user - Get all projects for the authenticated user with their tasks
 router.get("/user", getAllProjectsForUserWithTasks);
 
-// GET /api/projects/stats - Get project statistics
 router.get("/stats", getProjectStats);
 
-// GET /api/projects/:id - Get single project
 router.get("/:id",
   [
     param("id").isMongoId().withMessage("Invalid project ID"),
@@ -42,10 +37,8 @@ router.get("/:id",
   getProjectById
 );
 
-// POST /api/projects - Create new project (Moderator and Admin only)
 router.post("/", isModerator, createProject);
 
-// PUT /api/projects/:id - Update project
 router.put("/:id",
   [
     param("id").isMongoId().withMessage("Invalid project ID"),
@@ -56,7 +49,6 @@ router.put("/:id",
   updateProject
 );
 
-// DELETE /api/projects/:id - Delete project
 router.delete("/:id",
   [
     param("id").isMongoId().withMessage("Invalid project ID"),
@@ -66,7 +58,6 @@ router.delete("/:id",
   deleteProject
 );
 
-// PUT /api/projects/:id/team-members - Add team member to project
 router.put("/:id/team-members",
   [
     param("id").isMongoId().withMessage("Invalid project ID"),
@@ -81,7 +72,6 @@ router.put("/:id/team-members",
   addTeamMember
 );
 
-// DELETE /api/projects/:id/team-members/:userId - Remove team member from project
 router.delete("/:id/team-members/:userId",
   [
     param("id").isMongoId().withMessage("Invalid project ID"),

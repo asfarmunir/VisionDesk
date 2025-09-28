@@ -18,16 +18,12 @@ const { body, param } = require("express-validator");
 
 const router = express.Router();
 
-// All routes require authentication
 router.use(authenticate);
 
-// GET /api/tasks - Get all tasks (role-based access)
 router.get("/", getAllTasks);
 
-// GET /api/tasks/stats - Get task statistics
 router.get("/stats", getTaskStats);
 
-// GET /api/tasks/:id - Get single task
 router.get("/:id",
   [
     param("id").isMongoId().withMessage("Invalid task ID"),
@@ -37,10 +33,8 @@ router.get("/:id",
   getTaskById
 );
 
-// POST /api/tasks - Create new task (Moderator and Admin only)
 router.post("/", isModerator, validateTaskCreation, createTask);
 
-// PUT /api/tasks/:id - Update task
 router.put("/:id",
   [
     param("id").isMongoId().withMessage("Invalid task ID"),
@@ -51,7 +45,6 @@ router.put("/:id",
   updateTask
 );
 
-// DELETE /api/tasks/:id - Delete task
 router.delete("/:id",
   [
     param("id").isMongoId().withMessage("Invalid task ID"),
@@ -61,18 +54,5 @@ router.delete("/:id",
   deleteTask
 );
 
-// POST /api/tasks/:id/comments - Add comment to task
-router.post("/:id/comments",
-  [
-    param("id").isMongoId().withMessage("Invalid task ID"),
-    body("content")
-      .trim()
-      .isLength({ min: 1, max: 500 })
-      .withMessage("Comment must be between 1 and 500 characters"),
-    handleValidationErrors
-  ],
-  canAccessTask,
-  addComment
-);
 
 module.exports = router;

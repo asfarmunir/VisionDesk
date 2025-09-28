@@ -1,6 +1,5 @@
 const { body, validationResult } = require("express-validator");
 
-// Validation middleware to check for validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -13,7 +12,6 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// User validation rules
 const validateUserRegistration = [
   body("name")
     .trim()
@@ -105,7 +103,6 @@ const validateProjectUpdate = [
   handleValidationErrors
 ];
 
-// Task validation rules
 const validateTaskCreation = [
   body("title")
     .trim()
