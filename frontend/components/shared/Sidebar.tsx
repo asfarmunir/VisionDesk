@@ -19,6 +19,7 @@ const Sidebar = () => {
       return [
         { href: "/dashboard", label: "Dashboard" },
         { href: "/projects", label: "Projects" },
+        { href: "/user-management", label: "User Management" },
       ];
     }
     if (user.role === "moderator") {

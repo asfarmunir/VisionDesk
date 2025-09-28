@@ -39,6 +39,9 @@ export const usersApi = {
       ...(params.role ? { role: params.role } : {}),
       ...(params.isActive !== undefined && params.isActive !== '' ? { isActive: params.isActive } : {})
     })
+  },
+  async assignRole(id: string, role: 'admin' | 'moderator' | 'user'): Promise<UserSummary> {
+    return apiClient.put<UserSummary>(`/users/${id}/role`, { role })
   }
 }
 
