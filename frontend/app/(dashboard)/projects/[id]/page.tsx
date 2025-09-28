@@ -287,7 +287,7 @@ export default function ProjectDetailsPage() {
               <div className="space-y-2 max-h-[30rem] overflow-auto pr-1">
                 {project.tasks.map(
                   (t: import("@/lib/api/projects").ProjectTask) => (
-                    <TaskRow key={t._id} task={t} />
+                    <TaskRow key={t._id} task={t} projectId={project._id} />
                   )
                 )}
               </div>

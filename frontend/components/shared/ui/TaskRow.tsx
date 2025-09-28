@@ -7,7 +7,13 @@ import { useUpdateTask } from "@/hooks/useUpdateTask";
 import React from "react";
 import { CheckCircle2, Loader } from "lucide-react";
 
-export function TaskRow({ task }: { task: ProjectTask }) {
+export function TaskRow({
+  task,
+  projectId,
+}: {
+  task: ProjectTask;
+  projectId?: string;
+}) {
   const due = task.dueDate ? new Date(task.dueDate) : null;
   const overdue = task.isOverdue;
   const { mutate: updateTask, isPending } = useUpdateTask();
@@ -17,7 +23,7 @@ export function TaskRow({ task }: { task: ProjectTask }) {
     if (task.status !== "closed") return;
     setApproving(true);
     updateTask(
-      { id: task._id, data: { status: "approved" } },
+      { id: task._id, data: { status: "approved" }, projectId },
       { onSettled: () => setApproving(false) }
     );
   };
