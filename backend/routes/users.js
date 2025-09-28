@@ -22,7 +22,7 @@ const router = express.Router();
 router.use(authenticate);
 
 // GET /api/users - Get all users (Admin only)
-router.get("/", isAdmin, getAllUsers);
+router.get("/",  getAllUsers);
 
 // GET /api/users/stats - Get user statistics (Admin only)
 router.get("/stats", isAdmin, getUserStats);

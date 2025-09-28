@@ -57,6 +57,7 @@ const UserProjectsPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { data, isLoading, isFetching, refetch, error } =
     useUserProjectsWithTasks();
+  console.log("🚀 ~ UserProjectsPage ~ data:", data);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
@@ -320,9 +321,8 @@ const MemberProjectCard: React.FC<MemberCardProps> = ({
   project,
   onToggle,
 }) => {
-  const completion = project.completedTaskCount ?? 0;
-  const total = project.tasks.length ?? 0;
-  const progress = total > 0 ? Math.round((completion / total) * 100) : 0;
+  const metrics = computeTaskMetrics(project.tasks);
+  const progress = metrics.percent;
   return (
     <Card className="p-0 flex flex-col border border-border/50 overflow-hidden group">
       <button
@@ -339,7 +339,7 @@ const MemberProjectCard: React.FC<MemberCardProps> = ({
           </h3>
           <span
             className={cn(
-              "text-xs 2xl:text-sm px-2 py-1 rounded-full  font-medium border",
+              "text-xs capitalize  px-2 py-1 rounded-full  font-medium border",
               statusColors[project.status]
             )}
           >
@@ -352,19 +352,25 @@ const MemberProjectCard: React.FC<MemberCardProps> = ({
         <div className="flex flex-wrap gap-2 text-xs 2xl:text-sm">
           <span
             className={cn(
-              "px-2 py-1 rounded-full border font-medium",
+              "px-2 py-1 rounded-full capitalize text-xs border font-medium",
               priorityColors[project.priority]
             )}
           >
             {project.priority}
           </span>
+          {metrics.pendingApprovalCount > 0 && (
+            <span className="px-2 py-1 rounded-full capitalize  text-xs border bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 font-medium">
+              {metrics.pendingApprovalCount} pending approval
+            </span>
+          )}
         </div>
         <div className="flex items-center justify-between text-xs 2xl:text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex opacity-0 items-center gap-1">
             <Users className="h-3 w-3" /> {/* team size unknown here */}
           </span>
           <span className="inline-flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3" /> {completion}/{total}
+            <CheckCircle2 className="h-3 w-3" /> {metrics.approvedCount}/
+            {metrics.total} approved
           </span>
           {project.completedDate && (
             <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
@@ -608,9 +614,8 @@ interface ProjectTasksViewProps {
 }
 
 const ProjectTasksView: React.FC<ProjectTasksViewProps> = ({ project }) => {
-  const completion = project.completedTaskCount ?? 0;
-  const total = project.tasks.length ?? 0;
-  const progress = total > 0 ? Math.round((completion / total) * 100) : 0;
+  const metrics = computeTaskMetrics(project.tasks);
+  const progress = metrics.percent;
   return (
     <div className="space-y-6">
       <Card className="p-6 border border-border/60">
@@ -633,11 +638,16 @@ const ProjectTasksView: React.FC<ProjectTasksViewProps> = ({ project }) => {
               {project.priority}
             </span>
             <span className="px-4 py-1 rounded-full border bg-muted capitalize text-muted-foreground font-medium">
-              Tasks {completion}/{total}
+              Tasks {metrics.doneCount}/{metrics.total}
             </span>
-            <span className="px-4 py-1 rounded-full border bg-muted capitalizetext-muted-foreground font-medium">
-              Progress {progress}%
+            <span className="px-4 py-1 rounded-full border bg-muted capitalize text-muted-foreground font-medium">
+              Approved {metrics.approvedCount}/{metrics.total}
             </span>
+            {metrics.pendingApprovalCount > 0 && (
+              <span className="px-4 py-1 rounded-full border bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 font-medium">
+                {metrics.pendingApprovalCount} Pending Approval
+              </span>
+            )}
           </div>
           <div className="h-2 rounded bg-muted overflow-hidden">
             <div
@@ -670,6 +680,12 @@ const ProjectTasksView: React.FC<ProjectTasksViewProps> = ({ project }) => {
           <h2 className="text-sm font-semibold tracking-wide uppercase">
             Your Tasks ({project.tasks.length})
           </h2>
+          <div className="text-[10px] text-muted-foreground flex gap-3">
+            <span>Open {metrics.openCount}</span>
+            <span>In‑Progress {metrics.inProgressCount}</span>
+            <span>Pending {metrics.pendingApprovalCount}</span>
+            <span>Approved {metrics.approvedCount}</span>
+          </div>
         </div>
         <TaskList tasks={project.tasks} />
       </Card>
@@ -678,3 +694,53 @@ const ProjectTasksView: React.FC<ProjectTasksViewProps> = ({ project }) => {
 };
 
 export default UserProjectsPage;
+
+interface TaskMetrics {
+  total: number;
+  doneCount: number; // closed + approved
+  approvedCount: number;
+  openCount: number;
+  inProgressCount: number;
+  pendingApprovalCount: number; // closed only
+  percent: number; // doneCount / total
+  approvedPercent: number; // approvedCount / total
+}
+
+function computeTaskMetrics(tasks: UserProjectWithTasks["tasks"]): TaskMetrics {
+  const total = tasks.length;
+  let doneCount = 0;
+  let approvedCount = 0;
+  let openCount = 0;
+  let inProgressCount = 0;
+  let pendingApprovalCount = 0;
+  for (const t of tasks) {
+    switch (t.status) {
+      case "approved":
+        approvedCount++;
+        doneCount++;
+        break;
+      case "closed":
+        pendingApprovalCount++;
+        doneCount++; // treat as done for progress visualization
+        break;
+      case "in-progress":
+        inProgressCount++;
+        break;
+      case "open":
+        openCount++;
+        break;
+    }
+  }
+  const percent = total ? Math.round((doneCount / total) * 100) : 0;
+  const approvedPercent = total ? Math.round((approvedCount / total) * 100) : 0;
+  return {
+    total,
+    doneCount,
+    approvedCount,
+    openCount,
+    inProgressCount,
+    pendingApprovalCount,
+    percent,
+    approvedPercent,
+  };
+}
