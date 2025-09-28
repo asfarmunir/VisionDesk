@@ -14,6 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import useCreateTask from "@/hooks/useCreateTask";
 import toast from "react-hot-toast";
 import { Project } from "@/lib/api/projects";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddTaskDialogProps {
   project: Project;
@@ -185,42 +192,40 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
             </div>
             <div className="space-y-2">
               <Label>Priority</Label>
-              <div className="flex flex-wrap gap-2">
-                {priorities.map((p) => (
-                  <button
-                    type="button"
-                    key={p.value}
-                    onClick={() => setPriority(p.value)}
-                    className={`px-2 py-1 rounded text-xs border ${
-                      priority === p.value
-                        ? "bg-primary text-white border-primary"
-                        : "bg-background hover:bg-muted"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              <Select
+                value={priority}
+                onValueChange={(v) => setPriority(v as typeof priority)}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {priorities.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">
             <Label>Category</Label>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <button
-                  type="button"
-                  key={c.value}
-                  onClick={() => setCategory(c.value)}
-                  className={`px-2 py-1 rounded text-xs border ${
-                    category === c.value
-                      ? "bg-primary text-white border-primary"
-                      : "bg-background hover:bg-muted"
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
+            <Select
+              value={category}
+              onValueChange={(v) => setCategory(v as typeof category)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter className="pt-2 gap-2 sm:gap-0">
             <DialogClose asChild>

@@ -181,7 +181,7 @@ const ProjectsPage: React.FC = () => {
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
               <Input
-                placeholder="Search locally (title or description)..."
+                placeholder="Search (title or description)..."
                 value={clientSearch}
                 onChange={(e) => setClientSearch(e.target.value)}
                 className="pl-9"
@@ -253,7 +253,7 @@ const ProjectsPage: React.FC = () => {
             <span className="font-medium text-foreground">
               {displayedProjects.length}
             </span>{" "}
-            of {projects.length} fetched projects
+            of {projects.length} projects
             {anyClientFilter && <span> • filters applied</span>}
           </div>
           <div className="flex gap-2">
