@@ -66,15 +66,11 @@ const Sidebar = () => {
               <p className="text-white text-xs uppercase tracking-wide">
                 Welcome
               </p>
-              <div className="flex items-center gap-3 mt-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-white truncate">
-                    {user.name}
-                  </p>
-                  <p className="text-[11px] text-indigo-200/80 capitalize">
-                    {user.role}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between gap-3 mt-3">
+                <p className="font-semibold text-white truncate">{user.name}</p>
+                <p className="text-[11px] bg-white/10 py-1 px-3 font-bold rounded-full text-indigo-200/80 capitalize">
+                  {user.role}
+                </p>
               </div>
             </>
           ) : (
